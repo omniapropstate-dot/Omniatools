@@ -34,6 +34,8 @@ const Icons = {
   camera: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>,
   file: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
   location: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  user: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  save: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
 }
 
 function LoginScreen({ onLogin }) {
@@ -573,6 +575,112 @@ function PropertyDetail({ property, agents, onClose, onBrochure }) {
   )
 }
 
+function ProfileScreen({ session, currentUser, onSaved }) {
+  const [form, setForm] = useState({
+    full_name: currentUser?.full_name || '',
+    phone: currentUser?.phone || '',
+    email: currentUser?.email || session.user?.email || '',
+  })
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatar_url || '')
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const fileRef = useRef()
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true); setError('')
+    const fileName = `avatar_${session.user.id}_${Date.now()}`
+    const { data, error: upErr } = await supabase.storage.from('property-photos').upload(fileName, file)
+    if (!upErr) {
+      const { data: urlData } = supabase.storage.from('property-photos').getPublicUrl(fileName)
+      setAvatarUrl(urlData.publicUrl)
+    } else {
+      setError('Error al subir foto: ' + upErr.message)
+    }
+    setUploading(false)
+  }
+
+  const handleSave = async () => {
+    if (!form.full_name) { setError('El nombre es obligatorio'); return }
+    setSaving(true); setError(''); setSuccess('')
+    const { error: err } = await supabase.from('profiles').update({
+      full_name: form.full_name,
+      phone: form.phone,
+      email: form.email,
+      avatar_url: avatarUrl,
+    }).eq('id', session.user.id)
+    if (err) {
+      setError('Error al guardar: ' + err.message)
+    } else {
+      setSuccess('Perfil actualizado correctamente')
+      onSaved()
+    }
+    setSaving(false)
+  }
+
+  const inputStyle = {
+    width: '100%', padding: '12px 16px', background: colors.inputBg, border: `1px solid ${colors.border}`,
+    borderRadius: '10px', color: colors.text, fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+  }
+  const labelStyle = { color: colors.textSecondary, fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px' }
+
+  return (
+    <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+      <h1 style={{ color: colors.text, fontSize: '24px', fontWeight: '700', margin: '0 0 24px' }}>Mi Perfil</h1>
+      
+      <div style={{ background: colors.card, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px' }}>
+        {error && <div style={{ background: colors.redBg, color: colors.red, padding: '10px 14px', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
+        {success && <div style={{ background: colors.greenBg, color: colors.green, padding: '10px 14px', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>{success}</div>}
+
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div onClick={() => fileRef.current?.click()} style={{
+            width: '100px', height: '100px', borderRadius: '50%', margin: '0 auto 12px', cursor: 'pointer',
+            background: avatarUrl ? `url(${avatarUrl}) center/cover` : `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: `3px solid ${colors.border}`, position: 'relative',
+          }}>
+            {!avatarUrl && <span style={{ color: colors.white, fontSize: '36px', fontWeight: '700' }}>{form.full_name ? form.full_name[0].toUpperCase() : '?'}</span>}
+            <div style={{
+              position: 'absolute', bottom: '0', right: '0', width: '28px', height: '28px',
+              background: colors.accent, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: `2px solid ${colors.card}`,
+            }}>{Icons.camera}</div>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
+          <p style={{ color: colors.textMuted, fontSize: '12px', margin: 0 }}>{uploading ? 'Subiendo...' : 'Toca para cambiar foto'}</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={labelStyle}>Nombre completo *</label>
+            <input style={inputStyle} value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Tu nombre completo" />
+          </div>
+          <div>
+            <label style={labelStyle}>Teléfono</label>
+            <input type="tel" style={inputStyle} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="Ej: 70012345" />
+          </div>
+          <div>
+            <label style={labelStyle}>Correo electrónico</label>
+            <input type="email" style={inputStyle} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="tu@correo.com" />
+          </div>
+          <button onClick={handleSave} disabled={saving} style={{
+            width: '100%', padding: '14px', marginTop: '8px',
+            background: saving ? colors.textMuted : `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
+            color: colors.white, border: 'none', borderRadius: '10px', fontSize: '15px',
+            fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+          }}>
+            {Icons.save} {saving ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -694,6 +802,12 @@ export default function Home() {
             color: view === 'clients' ? colors.accent : colors.textSecondary, fontSize: '14px', fontWeight: '500',
             display: 'flex', alignItems: 'center', gap: '6px',
           }}>{Icons.users} Clientes</button>
+          <button onClick={() => setView('profile')} style={{
+            padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+            background: view === 'profile' ? colors.accentLight : 'transparent',
+            color: view === 'profile' ? colors.accent : colors.textSecondary, fontSize: '14px', fontWeight: '500',
+            display: 'flex', alignItems: 'center', gap: '6px',
+          }}>{Icons.user} Perfil</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ color: colors.textSecondary, fontSize: '13px' }}>{currentUser?.full_name || session.user?.email}</span>
@@ -749,6 +863,10 @@ export default function Home() {
             <h2 style={{ color: colors.text, fontSize: '20px', margin: '0 0 8px' }}>Módulo de Clientes</h2>
             <p style={{ fontSize: '14px', margin: 0 }}>Próximamente: gestión de clientes, calificación automática y seguimiento</p>
           </div>
+        )}
+
+        {view === 'profile' && (
+          <ProfileScreen session={session} currentUser={currentUser} onSaved={loadData} />
         )}
       </div>
 
