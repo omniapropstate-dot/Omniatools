@@ -36,6 +36,8 @@ const Icons = {
   location: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
   user: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   save: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+  upload: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>,
+  download: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/></svg>,
 }
 
 function LoginScreen({ onLogin }) {
@@ -582,6 +584,218 @@ function PropertyDetail({ property, agents, onClose, onBrochure }) {
   )
 }
 
+function BulkUploadModal({ session, onClose, onSaved }) {
+  const [file, setFile] = useState(null)
+  const [preview, setPreview] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const fileRef = useRef()
+
+  const downloadTemplate = () => {
+    const headers = 'titulo,operacion,tipo,precio,zona,direccion,habitaciones,banos,area_m2,estacionamientos'
+    const example1 = 'Casa moderna zona norte,venta,casa,150000,Zona Norte,Av. América #1234,3,2,120,1'
+    const example2 = 'Departamento centro,alquiler,departamento,3500,Centro,Calle Bolívar #567,2,1,85,0'
+    const example3 = 'Terreno Tiquipaya,venta,terreno,95000,Tiquipaya,Km 8 carretera,0,0,300,0'
+    const csv = [headers, example1, example2, example3].join('\n')
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'plantilla_propiedades.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const parseCSV = (text) => {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l)
+    if (lines.length < 2) return []
+    const rows = []
+    for (let i = 1; i < lines.length; i++) {
+      const vals = lines[i].split(',').map(v => v.trim())
+      if (vals.length < 4) continue
+      const opMap = { 'venta': 'venta', 'alquiler': 'alquiler', 'anticretico': 'anticretico', 'anticrético': 'anticretico' }
+      const typeMap = { 'casa': 'casa', 'departamento': 'departamento', 'depto': 'departamento', 'terreno': 'terreno', 'oficina': 'oficina', 'local': 'local_comercial', 'local comercial': 'local_comercial', 'otro': 'otro' }
+      rows.push({
+        title: vals[0] || '',
+        operation_type: opMap[(vals[1] || '').toLowerCase()] || 'venta',
+        property_type: typeMap[(vals[2] || '').toLowerCase()] || 'casa',
+        price: parseFloat(vals[3]) || 0,
+        zone: vals[4] || '',
+        address: vals[5] || '',
+        bedrooms: parseInt(vals[6]) || 0,
+        bathrooms: parseInt(vals[7]) || 0,
+        area_m2: parseFloat(vals[8]) || null,
+        parking_spots: parseInt(vals[9]) || 0,
+        status: 'disponible',
+        agent_id: session.user.id,
+        photos: [],
+      })
+    }
+    return rows
+  }
+
+  const parseXLSX = async (arrayBuffer) => {
+    try {
+      const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs')
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+      const sheet = workbook.Sheets[workbook.SheetNames[0]]
+      const json = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+      return json.map(row => {
+        const get = (keys) => { for (const k of keys) { if (row[k] !== undefined && row[k] !== '') return String(row[k]); } return '' }
+        const opMap = { 'venta': 'venta', 'alquiler': 'alquiler', 'anticretico': 'anticretico', 'anticrético': 'anticretico' }
+        const typeMap = { 'casa': 'casa', 'departamento': 'departamento', 'depto': 'departamento', 'terreno': 'terreno', 'oficina': 'oficina', 'local': 'local_comercial', 'local comercial': 'local_comercial', 'otro': 'otro' }
+        return {
+          title: get(['titulo', 'Titulo', 'TITULO', 'título', 'Título', 'title', 'Title']),
+          operation_type: opMap[(get(['operacion', 'Operacion', 'OPERACION', 'operación', 'Operación', 'operation'])).toLowerCase()] || 'venta',
+          property_type: typeMap[(get(['tipo', 'Tipo', 'TIPO', 'type'])).toLowerCase()] || 'casa',
+          price: parseFloat(get(['precio', 'Precio', 'PRECIO', 'price'])) || 0,
+          zone: get(['zona', 'Zona', 'ZONA', 'zone']),
+          address: get(['direccion', 'Direccion', 'DIRECCION', 'dirección', 'Dirección', 'address']),
+          bedrooms: parseInt(get(['habitaciones', 'Habitaciones', 'HABITACIONES', 'bedrooms'])) || 0,
+          bathrooms: parseInt(get(['banos', 'Banos', 'BANOS', 'baños', 'Baños', 'bathrooms'])) || 0,
+          area_m2: parseFloat(get(['area_m2', 'Area', 'AREA', 'area', 'área', 'Área', 'm2'])) || null,
+          parking_spots: parseInt(get(['estacionamientos', 'Estacionamientos', 'ESTACIONAMIENTOS', 'parking', 'estac'])) || 0,
+          status: 'disponible',
+          agent_id: session.user.id,
+          photos: [],
+        }
+      }).filter(r => r.title && r.price > 0)
+    } catch (err) {
+      setError('Error al leer el archivo Excel. Intenta con CSV.')
+      return []
+    }
+  }
+
+  const handleFile = async (e) => {
+    const f = e.target.files[0]
+    if (!f) return
+    setFile(f); setError(''); setPreview([])
+    
+    if (f.name.endsWith('.csv') || f.name.endsWith('.txt')) {
+      const text = await f.text()
+      const rows = parseCSV(text)
+      if (rows.length === 0) { setError('No se encontraron propiedades en el archivo. Verifica el formato.'); return }
+      setPreview(rows)
+    } else if (f.name.endsWith('.xlsx') || f.name.endsWith('.xls')) {
+      const buffer = await f.arrayBuffer()
+      const rows = await parseXLSX(buffer)
+      if (rows.length === 0) { setError('No se encontraron propiedades en el archivo. Verifica el formato.'); return }
+      setPreview(rows)
+    } else {
+      setError('Formato no soportado. Usa .xlsx, .xls o .csv')
+    }
+  }
+
+  const handleUpload = async () => {
+    if (preview.length === 0) return
+    setUploading(true); setError('')
+    const { error: err } = await supabase.from('properties').insert(preview)
+    if (err) {
+      setError('Error al subir: ' + err.message)
+    } else {
+      setSuccess(`${preview.length} propiedades subidas correctamente`)
+      setTimeout(() => { onSaved() }, 1500)
+    }
+    setUploading(false)
+  }
+
+  const opLabels = { venta: 'Venta', alquiler: 'Alquiler', anticretico: 'Anticrético' }
+  const typeLabels = { casa: 'Casa', departamento: 'Depto', terreno: 'Terreno', oficina: 'Oficina', local_comercial: 'Local', otro: 'Otro' }
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px',
+    }}>
+      <div style={{
+        background: colors.card, borderRadius: '20px', width: '100%', maxWidth: '650px',
+        maxHeight: '90vh', overflow: 'auto', border: `1px solid ${colors.border}`,
+      }}>
+        <div style={{
+          padding: '20px 24px', borderBottom: `1px solid ${colors.border}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          position: 'sticky', top: 0, background: colors.card, zIndex: 1, borderRadius: '20px 20px 0 0',
+        }}>
+          <h2 style={{ color: colors.text, fontSize: '18px', fontWeight: '600', margin: 0 }}>Carga masiva de propiedades</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: colors.textSecondary, cursor: 'pointer' }}>{Icons.x}</button>
+        </div>
+
+        <div style={{ padding: '20px 24px' }}>
+          {error && <div style={{ background: colors.redBg, color: colors.red, padding: '10px 14px', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
+          {success && <div style={{ background: colors.greenBg, color: colors.green, padding: '10px 14px', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>{success}</div>}
+
+          {/* Step 1: Download template */}
+          <div style={{ marginBottom: '20px', padding: '16px', background: colors.inputBg, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
+            <p style={{ color: colors.text, fontSize: '14px', fontWeight: '600', margin: '0 0 8px' }}>Paso 1: Descarga la plantilla</p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '0 0 12px' }}>
+              Descarga este archivo CSV de ejemplo, llénalo con tus propiedades y súbelo.
+            </p>
+            <button onClick={downloadTemplate} style={{
+              padding: '10px 16px', borderRadius: '8px', border: `1px solid ${colors.accent}`,
+              background: 'transparent', color: colors.accent, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600',
+            }}>{Icons.download} Descargar plantilla CSV</button>
+          </div>
+
+          {/* Step 2: Upload file */}
+          <div style={{ marginBottom: '20px', padding: '16px', background: colors.inputBg, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
+            <p style={{ color: colors.text, fontSize: '14px', fontWeight: '600', margin: '0 0 8px' }}>Paso 2: Sube tu archivo</p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '0 0 12px' }}>
+              Acepta archivos .xlsx (Excel) o .csv
+            </p>
+            <button onClick={() => fileRef.current?.click()} style={{
+              padding: '10px 16px', borderRadius: '8px', border: 'none',
+              background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
+              color: colors.white, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600',
+            }}>{Icons.upload} {file ? file.name : 'Seleccionar archivo'}</button>
+            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={handleFile} />
+          </div>
+
+          {/* Preview */}
+          {preview.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ color: colors.text, fontSize: '14px', fontWeight: '600', margin: '0 0 12px' }}>
+                Paso 3: Confirma ({preview.length} propiedades encontradas)
+              </p>
+              <div style={{ maxHeight: '250px', overflow: 'auto', borderRadius: '10px', border: `1px solid ${colors.border}` }}>
+                {preview.map((p, i) => (
+                  <div key={i} style={{
+                    padding: '10px 14px', borderBottom: i < preview.length - 1 ? `1px solid ${colors.border}` : 'none',
+                    background: i % 2 === 0 ? colors.inputBg : colors.card,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                      <span style={{ color: colors.text, fontSize: '13px', fontWeight: '600' }}>{p.title}</span>
+                      <span style={{ color: colors.accent, fontSize: '13px', fontWeight: '700' }}>Bs {Number(p.price).toLocaleString('es-BO')}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                      <span style={{ color: colors.textMuted, fontSize: '11px' }}>{opLabels[p.operation_type]}</span>
+                      <span style={{ color: colors.textMuted, fontSize: '11px' }}>·</span>
+                      <span style={{ color: colors.textMuted, fontSize: '11px' }}>{typeLabels[p.property_type]}</span>
+                      <span style={{ color: colors.textMuted, fontSize: '11px' }}>·</span>
+                      <span style={{ color: colors.textMuted, fontSize: '11px' }}>{p.zone}</span>
+                      {p.bedrooms > 0 && <span style={{ color: colors.textMuted, fontSize: '11px' }}>· {p.bedrooms} hab</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={handleUpload} disabled={uploading} style={{
+                width: '100%', padding: '14px', marginTop: '16px',
+                background: uploading ? colors.textMuted : colors.green,
+                color: colors.white, border: 'none', borderRadius: '10px', fontSize: '15px',
+                fontWeight: '600', cursor: uploading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              }}>
+                {uploading ? 'Subiendo...' : `Subir ${preview.length} propiedades`}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ProfileScreen({ session, currentUser, onSaved }) {
   const [form, setForm] = useState({
     full_name: currentUser?.full_name || '',
@@ -700,6 +914,7 @@ export default function Home() {
   const [editProperty, setEditProperty] = useState(null)
   const [viewProperty, setViewProperty] = useState(null)
   const [propView, setPropView] = useState('all') // 'all' or 'mine'
+  const [showBulkUpload, setShowBulkUpload] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -833,13 +1048,18 @@ export default function Home() {
                 <h1 style={{ color: colors.text, fontSize: '20px', fontWeight: '700', margin: '0 0 4px' }}>Propiedades</h1>
                 <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>{filteredProperties.length} de {properties.length} propiedades</p>
               </div>
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <button onClick={() => setShowFilters(!showFilters)} style={{
                   padding: '8px 12px', borderRadius: '10px', border: `1px solid ${colors.border}`,
                   background: showFilters ? colors.accentLight : colors.card,
                   color: showFilters ? colors.accent : colors.textSecondary, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: '500',
                 }}>{Icons.filter} Filtros</button>
+                <button onClick={() => setShowBulkUpload(true)} style={{
+                  padding: '8px 12px', borderRadius: '10px', border: `1px solid ${colors.border}`,
+                  background: colors.card, color: colors.textSecondary, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: '500',
+                }}>{Icons.upload} Excel</button>
                 <button onClick={() => { setEditProperty(null); setShowForm(true) }} style={{
                   padding: '8px 12px', borderRadius: '10px', border: 'none',
                   background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
@@ -908,6 +1128,11 @@ export default function Home() {
       {viewProperty && (
         <PropertyDetail property={viewProperty} agents={agents}
           onClose={() => setViewProperty(null)} onBrochure={generateBrochure} />
+      )}
+      {showBulkUpload && (
+        <BulkUploadModal session={session}
+          onClose={() => setShowBulkUpload(false)}
+          onSaved={() => { setShowBulkUpload(false); loadData() }} />
       )}
     </div>
   )
