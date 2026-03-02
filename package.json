@@ -15,15 +15,3 @@
     "xlsx": "^0.18.5"
   }
 }
-```
-
-Dale **Commit changes**.
-
-**Cambio 2:** Ve a la carpeta **app** → clic en **page.js** → lápiz (✏️). Busca esta línea (usa Ctrl+F para buscar):
-```
-const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs')
-```
-
-Y reemplázala por:
-```
-const XLSX = await import('xlsx')
