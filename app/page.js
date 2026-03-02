@@ -155,7 +155,7 @@ function LoginScreen({ onLogin }) {
   )
 }
 
-function PropertyCard({ property, agents, currentUserId, onView, onEdit }) {
+function PropertyCard({ property, agents, currentUserId, onView, onEdit, onDelete, showOwnerActions }) {
   const agent = agents.find(a => a.id === property.agent_id)
   const isOwner = property.agent_id === currentUserId
   const statusMap = {
@@ -174,51 +174,58 @@ function PropertyCard({ property, agents, currentUserId, onView, onEdit }) {
       border: `1px solid ${colors.border}`, cursor: 'pointer', transition: 'all 0.2s',
     }}>
       <div style={{
-        height: '180px', background: photo ? `url(${photo}) center/cover` : 'linear-gradient(135deg, #2a2040, #1a1530)',
+        height: '160px', background: photo ? `url(${photo}) center/cover` : 'linear-gradient(135deg, #2a2040, #1a1530)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
       }}>
         {!photo && <span style={{ fontSize: '40px' }}>🏠</span>}
-        <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', gap: '6px' }}>
-          <span style={{ background: 'rgba(0,0,0,0.7)', color: colors.white, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
+        <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          <span style={{ background: 'rgba(0,0,0,0.7)', color: colors.white, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
             {opLabels[property.operation_type]}
           </span>
-          <span style={{ background: status.bg, color: status.color, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
+          <span style={{ background: status.bg, color: status.color, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
             {status.label}
           </span>
         </div>
-        {isOwner && (
-          <button onClick={(e) => { e.stopPropagation(); onEdit(property) }} style={{
-            position: 'absolute', top: '12px', right: '12px', background: 'rgba(0,0,0,0.7)',
-            border: 'none', color: colors.white, width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>{Icons.edit}</button>
+        {isOwner && showOwnerActions && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '4px' }}>
+            <button onClick={(e) => { e.stopPropagation(); onEdit(property) }} style={{
+              background: 'rgba(0,0,0,0.7)', border: 'none', color: colors.white,
+              width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>{Icons.edit}</button>
+            <button onClick={(e) => { e.stopPropagation(); if(confirm('¿Eliminar esta propiedad?')) onDelete(property.id) }} style={{
+              background: 'rgba(220,38,38,0.8)', border: 'none', color: colors.white,
+              width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
+            }}>🗑</button>
+          </div>
         )}
       </div>
-      <div style={{ padding: '16px' }}>
-        <h3 style={{ color: colors.text, fontSize: '15px', fontWeight: '600', margin: '0 0 8px' }}>{property.title}</h3>
-        <p style={{ color: colors.accent, fontSize: '20px', fontWeight: '700', margin: '0 0 10px' }}>
+      <div style={{ padding: '14px' }}>
+        <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '600', margin: '0 0 6px', lineHeight: '1.3' }}>{property.title}</h3>
+        <p style={{ color: colors.accent, fontSize: '18px', fontWeight: '700', margin: '0 0 8px' }}>
           Bs {Number(property.price).toLocaleString('es-BO')}
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px', color: colors.textSecondary, fontSize: '13px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '10px', color: colors.textSecondary, fontSize: '12px' }}>
           {Icons.location} {property.zone}
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
-          {property.bedrooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.textSecondary, fontSize: '13px' }}>{Icons.bed} {property.bedrooms}</span>}
-          {property.bathrooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.textSecondary, fontSize: '13px' }}>{Icons.bath} {property.bathrooms}</span>}
-          {property.area_m2 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.textSecondary, fontSize: '13px' }}>{Icons.area} {property.area_m2}m²</span>}
-          {property.parking_spots > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.textSecondary, fontSize: '13px' }}>{Icons.car} {property.parking_spots}</span>}
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          {property.bedrooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: colors.textSecondary, fontSize: '12px' }}>{Icons.bed} {property.bedrooms}</span>}
+          {property.bathrooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: colors.textSecondary, fontSize: '12px' }}>{Icons.bath} {property.bathrooms}</span>}
+          {property.area_m2 && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: colors.textSecondary, fontSize: '12px' }}>{Icons.area} {property.area_m2}m²</span>}
+          {property.parking_spots > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: colors.textSecondary, fontSize: '12px' }}>{Icons.car} {property.parking_spots}</span>}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: colors.inputBg, borderRadius: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: colors.inputBg, borderRadius: '8px' }}>
           <div>
-            <span style={{ color: colors.textMuted, fontSize: '11px' }}>Agente</span>
-            <p style={{ color: colors.text, fontSize: '13px', fontWeight: '500', margin: 0 }}>
-              {agent?.full_name || 'Sin asignar'} {isOwner && <span style={{ color: colors.accent, fontSize: '11px' }}>(tú)</span>}
+            <span style={{ color: colors.textMuted, fontSize: '10px' }}>Agente</span>
+            <p style={{ color: colors.text, fontSize: '12px', fontWeight: '500', margin: 0 }}>
+              {agent?.full_name || 'Sin asignar'} {isOwner && <span style={{ color: colors.accent, fontSize: '10px' }}>(tú)</span>}
             </p>
           </div>
           {agent?.phone && (
-            <a href={`tel:${agent.phone}`} onClick={e => e.stopPropagation()} style={{ color: colors.green, display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', textDecoration: 'none' }}>
-              {Icons.phone} {agent.phone}
-            </a>
+            <a href={`https://wa.me/591${agent.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
+              color: '#25D366', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', textDecoration: 'none', fontWeight: '600',
+            }}>{Icons.phone} WhatsApp</a>
           )}
         </div>
       </div>
@@ -692,6 +699,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false)
   const [editProperty, setEditProperty] = useState(null)
   const [viewProperty, setViewProperty] = useState(null)
+  const [propView, setPropView] = useState('all') // 'all' or 'mine'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -716,7 +724,13 @@ export default function Home() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  const deleteProperty = async (id) => {
+    await supabase.from('properties').delete().eq('id', id)
+    loadData()
+  }
+
   const filteredProperties = properties.filter(p => {
+    if (propView === 'mine' && p.agent_id !== session?.user?.id) return false
     if (filters.operation && p.operation_type !== filters.operation) return false
     if (filters.type && p.property_type !== filters.type) return false
     if (filters.zone && p.zone !== filters.zone) return false
@@ -777,80 +791,96 @@ export default function Home() {
     <div style={{ minHeight: '100vh', background: colors.bg, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <nav style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 20px', background: colors.card, borderBottom: `1px solid ${colors.border}`,
-        position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', gap: '8px',
+        padding: '10px 16px', background: colors.card, borderBottom: `1px solid ${colors.border}`,
+        position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', gap: '6px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            width: '36px', height: '36px', borderRadius: '10px',
+            width: '32px', height: '32px', borderRadius: '8px',
             background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '16px', fontWeight: 'bold', color: colors.white,
+            fontSize: '14px', fontWeight: 'bold', color: colors.white,
           }}>O</div>
-          <span style={{ color: colors.text, fontSize: '17px', fontWeight: '700' }}>OmniaTools</span>
+          <span style={{ color: colors.text, fontSize: '15px', fontWeight: '700' }}>OmniaTools</span>
         </div>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <button onClick={() => setView('properties')} style={{
-            padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-            background: view === 'properties' ? colors.accentLight : 'transparent',
-            color: view === 'properties' ? colors.accent : colors.textSecondary, fontSize: '14px', fontWeight: '500',
-            display: 'flex', alignItems: 'center', gap: '6px',
-          }}>{Icons.home} Propiedades</button>
-          <button onClick={() => setView('clients')} style={{
-            padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-            background: view === 'clients' ? colors.accentLight : 'transparent',
-            color: view === 'clients' ? colors.accent : colors.textSecondary, fontSize: '14px', fontWeight: '500',
-            display: 'flex', alignItems: 'center', gap: '6px',
-          }}>{Icons.users} Clientes</button>
-          <button onClick={() => setView('profile')} style={{
-            padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-            background: view === 'profile' ? colors.accentLight : 'transparent',
-            color: view === 'profile' ? colors.accent : colors.textSecondary, fontSize: '14px', fontWeight: '500',
-            display: 'flex', alignItems: 'center', gap: '6px',
-          }}>{Icons.user} Perfil</button>
+        <div style={{ display: 'flex', gap: '2px' }}>
+          {[
+            { key: 'properties', icon: Icons.home, label: 'Propiedades' },
+            { key: 'clients', icon: Icons.users, label: 'Clientes' },
+            { key: 'profile', icon: Icons.user, label: 'Perfil' },
+          ].map(tab => (
+            <button key={tab.key} onClick={() => setView(tab.key)} style={{
+              padding: '6px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+              background: view === tab.key ? colors.accentLight : 'transparent',
+              color: view === tab.key ? colors.accent : colors.textSecondary, fontSize: '12px', fontWeight: '500',
+              display: 'flex', alignItems: 'center', gap: '4px',
+            }}>{tab.icon} <span style={{ display: 'inline' }}>{tab.label}</span></button>
+          ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ color: colors.textSecondary, fontSize: '13px' }}>{currentUser?.full_name || session.user?.email}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: '12px', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {currentUser?.full_name || session.user?.email}
+          </span>
           <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex' }}>{Icons.logout}</button>
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }}>
         {view === 'properties' && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h1 style={{ color: colors.text, fontSize: '24px', fontWeight: '700', margin: '0 0 4px' }}>Propiedades</h1>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{filteredProperties.length} de {properties.length} propiedades</p>
+                <h1 style={{ color: colors.text, fontSize: '20px', fontWeight: '700', margin: '0 0 4px' }}>Propiedades</h1>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>{filteredProperties.length} de {properties.length} propiedades</p>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={() => setShowFilters(!showFilters)} style={{
-                  padding: '10px 16px', borderRadius: '10px', border: `1px solid ${colors.border}`,
+                  padding: '8px 12px', borderRadius: '10px', border: `1px solid ${colors.border}`,
                   background: showFilters ? colors.accentLight : colors.card,
                   color: showFilters ? colors.accent : colors.textSecondary, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: '500',
+                  display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: '500',
                 }}>{Icons.filter} Filtros</button>
                 <button onClick={() => { setEditProperty(null); setShowForm(true) }} style={{
-                  padding: '10px 16px', borderRadius: '10px', border: 'none',
+                  padding: '8px 12px', borderRadius: '10px', border: 'none',
                   background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
-                  color: colors.white, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: '600',
+                  color: colors.white, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: '600',
                 }}>{Icons.plus} Nueva</button>
               </div>
+            </div>
+
+            {/* Toggle Todas / Mis propiedades */}
+            <div style={{
+              display: 'flex', marginBottom: '14px', background: colors.card,
+              borderRadius: '10px', border: `1px solid ${colors.border}`, padding: '4px', width: 'fit-content',
+            }}>
+              <button onClick={() => setPropView('all')} style={{
+                padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                background: propView === 'all' ? colors.accent : 'transparent',
+                color: propView === 'all' ? colors.white : colors.textSecondary,
+                fontSize: '13px', fontWeight: '600', transition: 'all 0.2s',
+              }}>Todas</button>
+              <button onClick={() => setPropView('mine')} style={{
+                padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                background: propView === 'mine' ? colors.accent : 'transparent',
+                color: propView === 'mine' ? colors.white : colors.textSecondary,
+                fontSize: '13px', fontWeight: '600', transition: 'all 0.2s',
+              }}>Mis propiedades</button>
             </div>
 
             {showFilters && <FiltersPanel filters={filters} setFilters={setFilters} zones={zones} />}
 
             {filteredProperties.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary, background: colors.card, borderRadius: '16px', border: `1px solid ${colors.border}` }}>
+              <div style={{ textAlign: 'center', padding: '50px 20px', color: colors.textSecondary, background: colors.card, borderRadius: '16px', border: `1px solid ${colors.border}` }}>
                 <div style={{ fontSize: '40px', marginBottom: '12px' }}>🏠</div>
                 <p style={{ fontSize: '16px', margin: '0 0 4px', color: colors.text }}>No hay propiedades</p>
                 <p style={{ fontSize: '14px', margin: 0 }}>{properties.length > 0 ? 'Ajusta los filtros' : 'Agrega tu primera propiedad'}</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
                 {filteredProperties.map(p => (
                   <PropertyCard key={p.id} property={p} agents={agents} currentUserId={session.user?.id}
-                    onView={setViewProperty} onEdit={(prop) => { setEditProperty(prop); setShowForm(true) }} />
+                    onView={setViewProperty} onEdit={(prop) => { setEditProperty(prop); setShowForm(true) }}
+                    onDelete={deleteProperty} showOwnerActions={propView === 'mine'} />
                 ))}
               </div>
             )}
