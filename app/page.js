@@ -640,7 +640,7 @@ function BulkUploadModal({ session, onClose, onSaved }) {
 
   const parseXLSX = async (arrayBuffer) => {
     try {
-      const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs')
+      const XLSX = await import('xlsx')
       const workbook = XLSX.read(arrayBuffer, { type: 'array' })
       const sheet = workbook.Sheets[workbook.SheetNames[0]]
       const json = XLSX.utils.sheet_to_json(sheet, { defval: '' })
