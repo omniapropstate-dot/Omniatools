@@ -224,11 +224,16 @@ function PropertyCard({ property, agents, currentUserId, onView, onEdit, onDelet
               {agent?.full_name || 'Sin asignar'} {isOwner && <span style={{ color: colors.accent, fontSize: '10px' }}>(tú)</span>}
             </p>
           </div>
-          {agent?.phone && (
-            <a href={`https://wa.me/591${agent.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
-              color: '#25D366', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', textDecoration: 'none', fontWeight: '600',
-            }}>{Icons.phone} WhatsApp</a>
-          )}
+          <button onClick={(e) => {
+            e.stopPropagation()
+            const opL = { venta: 'Venta', alquiler: 'Alquiler', anticretico: 'Anticrético' }
+            const msg = `🏠 *${property.title}*%0A💰 Bs ${Number(property.price).toLocaleString('es-BO')} | ${opL[property.operation_type]}%0A📍 ${property.zone}${property.address ? ' · ' + property.address : ''}%0A${property.bedrooms > 0 ? '🛏 ' + property.bedrooms + ' hab · ' : ''}${property.bathrooms > 0 ? '🚿 ' + property.bathrooms + ' baños · ' : ''}${property.area_m2 ? '📐 ' + property.area_m2 + 'm²' : ''}%0A%0A📞 Contacto: ${agent?.full_name || ''} - ${agent?.phone || ''}`
+            window.open(`https://wa.me/?text=${msg}`, '_blank')
+          }} style={{
+            background: '#25D366', border: 'none', color: colors.white,
+            padding: '6px 10px', borderRadius: '6px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '600',
+          }}>📤 Compartir</button>
         </div>
       </div>
     </div>
@@ -635,7 +640,7 @@ function BulkUploadModal({ session, onClose, onSaved }) {
 
   const parseXLSX = async (arrayBuffer) => {
     try {
-      const XLSX = await import('xlsx')
+      const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs')
       const workbook = XLSX.read(arrayBuffer, { type: 'array' })
       const sheet = workbook.Sheets[workbook.SheetNames[0]]
       const json = XLSX.utils.sheet_to_json(sheet, { defval: '' })
