@@ -542,7 +542,6 @@ export default function Home() {
     .btn{display:block;width:100%;padding:14px;background:#6C63FF;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;box-sizing:border-box}</style></head>
     <body><div class="header"><span class="badge">${opLabels[property.operation_type]} · ${typeLabels[property.property_type]}</span>
     <div class="title">${property.title}</div><div class="price">$ ${Number(property.price).toLocaleString('en-US')} USD</div>
-    ${priceBs?`<div class="price-bs">${priceBs}</div>`:''}
     <div style="opacity:0.9;font-size:15px;margin-top:8px">📍 ${property.zone}${property.address?` · ${property.address}`:''} · Cochabamba</div></div>
     <div class="features"><div class="feature"><div class="feature-value">${property.bedrooms}</div><div class="feature-label">Habitaciones</div></div>
     <div class="feature"><div class="feature-value">${property.bathrooms}</div><div class="feature-label">Baños</div></div>
