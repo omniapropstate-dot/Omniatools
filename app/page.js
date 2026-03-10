@@ -389,38 +389,106 @@ function BulkUploadModal({ session, onClose, onSaved }) {
 }
 
 function ToolsScreen() {
-  const [pv, setPv] = useState('')
-  const [cb, setCb] = useState('')
-  const [result, setResult] = useState(null)
-  const evaluate = () => {
-    if (!pv||!cb) return
-    const v=parseFloat(pv), b=parseFloat(cb), min=v*0.20
-    setResult({ isApt:b>=min, min, pct:((b/v)*100).toFixed(1), missing:b>=min?0:min-b })
-  }
+  const [activeTool, setActiveTool] = useState('evaluador')
   const is = { width:'100%', padding:'12px 16px', background:colors.inputBg, border:`1px solid ${colors.border}`, borderRadius:'10px', color:colors.text, fontSize:'16px', outline:'none', boxSizing:'border-box' }
+  const ls = { color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }
+  // Evaluador
+  const [pv, setPv] = useState(''); const [cb, setCb] = useState(''); const [evResult, setEvResult] = useState(null)
+  const evaluate = () => { if(!pv||!cb)return; const v=parseFloat(pv),b=parseFloat(cb),min=v*0.20; setEvResult({isApt:b>=min,min,pct:((b/v)*100).toFixed(1),missing:b>=min?0:min-b}) }
+  // Cuota mensual
+  const [lnPrice, setLnPrice] = useState(''); const [lnDown, setLnDown] = useState(''); const [lnRate, setLnRate] = useState(''); const [lnYears, setLnYears] = useState(''); const [lnResult, setLnResult] = useState(null)
+  const calcLoan = () => { if(!lnPrice||!lnDown||!lnRate||!lnYears)return; const p=parseFloat(lnPrice)-parseFloat(lnDown),r=parseFloat(lnRate)/100/12,n=parseInt(lnYears)*12; if(r===0){setLnResult({monthly:p/n,total:p,interest:0});return}; const m=p*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1); setLnResult({monthly:m,total:m*n,interest:(m*n)-p}) }
+  // Comisión
+  const [comPrice, setComPrice] = useState(''); const [comPct, setComPct] = useState('3'); const [comResult, setComResult] = useState(null)
+  const calcCom = () => { if(!comPrice||!comPct)return; const c=parseFloat(comPrice)*parseFloat(comPct)/100; setComResult({amount:c,pct:comPct}) }
+  // Conversor
+  const [convUsd, setConvUsd] = useState(''); const [convTc, setConvTc] = useState('6.96'); const [convDir, setConvDir] = useState('usd2bs')
+  const convResult = convUsd&&convTc ? (convDir==='usd2bs' ? parseFloat(convUsd)*parseFloat(convTc) : parseFloat(convUsd)/parseFloat(convTc)) : null
+  // Precio m2
+  const [m2Price, setM2Price] = useState(''); const [m2Area, setM2Area] = useState('')
+  const m2Result = m2Price&&m2Area ? parseFloat(m2Price)/parseFloat(m2Area) : null
+
+  const tools = [{id:'evaluador',label:'Evaluador',icon:'🎯'},{id:'cuota',label:'Cuota mensual',icon:'📊'},{id:'comision',label:'Comisión',icon:'💰'},{id:'conversor',label:'USD ↔ Bs',icon:'💱'},{id:'m2',label:'Precio/m²',icon:'📐'}]
+
   return (
     <div style={{ maxWidth:'500px', margin:'0 auto' }}>
-      <h1 style={{ color:colors.text, fontSize:'20px', fontWeight:'700', margin:'0 0 24px' }}>Herramientas Ágiles</h1>
-      <div style={{ background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}`, padding:'24px' }}>
+      <h1 style={{ color:colors.text, fontSize:'20px', fontWeight:'700', margin:'0 0 16px' }}>Herramientas Ágiles</h1>
+      <div style={{ display:'flex', gap:'6px', flexWrap:'wrap', marginBottom:'16px' }}>
+        {tools.map(t=><button key={t.id} onClick={()=>setActiveTool(t.id)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${activeTool===t.id?colors.accent:colors.border}`, background:activeTool===t.id?colors.accentLight:colors.card, color:activeTool===t.id?colors.accent:colors.textSecondary, fontSize:'12px', fontWeight:'600', cursor:'pointer' }}>{t.icon} {t.label}</button>)}
+      </div>
+
+      {activeTool==='evaluador' && <div style={{ background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}`, padding:'24px' }}>
         <h3 style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:'0 0 4px' }}>Evaluador de Cliente</h3>
         <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>¿Tu cliente puede adquirir la propiedad? Necesita al menos el 20% del valor total.</p>
-        <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Valor de la propiedad (USD)</label><input type="number" style={is} value={pv} onChange={e=>{setPv(e.target.value);setResult(null)}} placeholder="Ej: 150000" /></div>
-        <div style={{ marginBottom:'20px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Capital disponible del cliente (USD)</label><input type="number" style={is} value={cb} onChange={e=>{setCb(e.target.value);setResult(null)}} placeholder="Ej: 30000" /></div>
+        <div style={{ marginBottom:'16px' }}><label style={ls}>Valor de la propiedad (USD)</label><input type="number" style={is} value={pv} onChange={e=>{setPv(e.target.value);setEvResult(null)}} placeholder="Ej: 150000" /></div>
+        <div style={{ marginBottom:'20px' }}><label style={ls}>Capital disponible del cliente (USD)</label><input type="number" style={is} value={cb} onChange={e=>{setCb(e.target.value);setEvResult(null)}} placeholder="Ej: 30000" /></div>
         <button onClick={evaluate} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Evaluar</button>
-        {result && (
-          <div style={{ marginTop:'20px', padding:'20px', borderRadius:'12px', background:result.isApt?colors.greenBg:colors.redBg, border:`1px solid ${result.isApt?'rgba(52,211,153,0.3)':'rgba(248,113,113,0.3)'}` }}>
-            <div style={{ textAlign:'center', marginBottom:'12px' }}>
-              <span style={{ fontSize:'40px' }}>{result.isApt?'✅':'❌'}</span>
-              <h3 style={{ color:result.isApt?colors.green:colors.red, fontSize:'18px', fontWeight:'700', margin:'8px 0 0' }}>{result.isApt?'CLIENTE APTO':'CLIENTE NO APTO'}</h3>
-            </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'12px' }}>
-              <div style={{ textAlign:'center', padding:'12px', background:'rgba(0,0,0,0.2)', borderRadius:'8px' }}><p style={{ color:colors.textMuted, fontSize:'11px', margin:'0 0 4px' }}>Mínimo requerido (20%)</p><p style={{ color:colors.text, fontSize:'16px', fontWeight:'700', margin:0 }}>$ {result.min.toLocaleString('en-US')}</p></div>
-              <div style={{ textAlign:'center', padding:'12px', background:'rgba(0,0,0,0.2)', borderRadius:'8px' }}><p style={{ color:colors.textMuted, fontSize:'11px', margin:'0 0 4px' }}>Capital del cliente</p><p style={{ color:colors.text, fontSize:'16px', fontWeight:'700', margin:0 }}>{result.pct}%</p></div>
-            </div>
-            {!result.isApt && <p style={{ color:colors.red, fontSize:'13px', textAlign:'center', marginTop:'12px', margin:'12px 0 0' }}>Le faltan $ {result.missing.toLocaleString('en-US')} para alcanzar el 20%</p>}
+        {evResult && <div style={{ marginTop:'20px', padding:'20px', borderRadius:'12px', background:evResult.isApt?colors.greenBg:colors.redBg, border:`1px solid ${evResult.isApt?'rgba(52,211,153,0.3)':'rgba(248,113,113,0.3)'}` }}>
+          <div style={{ textAlign:'center', marginBottom:'12px' }}><span style={{ fontSize:'40px' }}>{evResult.isApt?'✅':'❌'}</span><h3 style={{ color:evResult.isApt?colors.green:colors.red, fontSize:'18px', fontWeight:'700', margin:'8px 0 0' }}>{evResult.isApt?'CLIENTE APTO':'CLIENTE NO APTO'}</h3></div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'12px' }}>
+            <div style={{ textAlign:'center', padding:'12px', background:'rgba(0,0,0,0.2)', borderRadius:'8px' }}><p style={{ color:colors.textMuted, fontSize:'11px', margin:'0 0 4px' }}>Mínimo requerido (20%)</p><p style={{ color:colors.text, fontSize:'16px', fontWeight:'700', margin:0 }}>$ {evResult.min.toLocaleString('en-US')}</p></div>
+            <div style={{ textAlign:'center', padding:'12px', background:'rgba(0,0,0,0.2)', borderRadius:'8px' }}><p style={{ color:colors.textMuted, fontSize:'11px', margin:'0 0 4px' }}>Capital del cliente</p><p style={{ color:colors.text, fontSize:'16px', fontWeight:'700', margin:0 }}>{evResult.pct}%</p></div>
           </div>
-        )}
-      </div>
+          {!evResult.isApt && <p style={{ color:colors.red, fontSize:'13px', textAlign:'center', margin:'12px 0 0' }}>Le faltan $ {evResult.missing.toLocaleString('en-US')} para alcanzar el 20%</p>}
+        </div>}
+      </div>}
+
+      {activeTool==='cuota' && <div style={{ background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}`, padding:'24px' }}>
+        <h3 style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:'0 0 4px' }}>Calculadora de Cuota Mensual</h3>
+        <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>Simula el crédito hipotecario de tu cliente.</p>
+        <div style={{ marginBottom:'12px' }}><label style={ls}>Precio de la propiedad (USD)</label><input type="number" style={is} value={lnPrice} onChange={e=>{setLnPrice(e.target.value);setLnResult(null)}} placeholder="150000" /></div>
+        <div style={{ marginBottom:'12px' }}><label style={ls}>Enganche / Pie (USD)</label><input type="number" style={is} value={lnDown} onChange={e=>{setLnDown(e.target.value);setLnResult(null)}} placeholder="30000" /></div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'20px' }}>
+          <div><label style={ls}>Tasa anual (%)</label><input type="number" step="0.1" style={is} value={lnRate} onChange={e=>{setLnRate(e.target.value);setLnResult(null)}} placeholder="7.5" /></div>
+          <div><label style={ls}>Plazo (años)</label><input type="number" style={is} value={lnYears} onChange={e=>{setLnYears(e.target.value);setLnResult(null)}} placeholder="20" /></div>
+        </div>
+        <button onClick={calcLoan} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Calcular</button>
+        {lnResult && <div style={{ marginTop:'20px', padding:'20px', borderRadius:'12px', background:colors.greenBg, border:'1px solid rgba(52,211,153,0.3)' }}>
+          <div style={{ textAlign:'center', marginBottom:'16px' }}><p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>Cuota mensual estimada</p><p style={{ color:colors.green, fontSize:'28px', fontWeight:'700', margin:0 }}>$ {lnResult.monthly.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</p></div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
+            <div style={{ textAlign:'center', padding:'12px', background:'rgba(0,0,0,0.2)', borderRadius:'8px' }}><p style={{ color:colors.textMuted, fontSize:'11px', margin:'0 0 4px' }}>Total a pagar</p><p style={{ color:colors.text, fontSize:'14px', fontWeight:'700', margin:0 }}>$ {lnResult.total.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</p></div>
+            <div style={{ textAlign:'center', padding:'12px', background:'rgba(0,0,0,0.2)', borderRadius:'8px' }}><p style={{ color:colors.textMuted, fontSize:'11px', margin:'0 0 4px' }}>Total intereses</p><p style={{ color:colors.yellow, fontSize:'14px', fontWeight:'700', margin:0 }}>$ {lnResult.interest.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</p></div>
+          </div>
+        </div>}
+      </div>}
+
+      {activeTool==='comision' && <div style={{ background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}`, padding:'24px' }}>
+        <h3 style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:'0 0 4px' }}>Calculadora de Comisión</h3>
+        <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>Calcula tu comisión por la venta.</p>
+        <div style={{ marginBottom:'12px' }}><label style={ls}>Precio de venta (USD)</label><input type="number" style={is} value={comPrice} onChange={e=>{setComPrice(e.target.value);setComResult(null)}} placeholder="150000" /></div>
+        <div style={{ marginBottom:'20px' }}><label style={ls}>Porcentaje de comisión (%)</label><input type="number" step="0.5" style={is} value={comPct} onChange={e=>{setComPct(e.target.value);setComResult(null)}} placeholder="3" /></div>
+        <button onClick={calcCom} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Calcular</button>
+        {comResult && <div style={{ marginTop:'20px', padding:'20px', borderRadius:'12px', background:colors.greenBg, border:'1px solid rgba(52,211,153,0.3)', textAlign:'center' }}>
+          <p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>Tu comisión ({comResult.pct}%)</p>
+          <p style={{ color:colors.green, fontSize:'28px', fontWeight:'700', margin:0 }}>$ {comResult.amount.toLocaleString('en-US')}</p>
+        </div>}
+      </div>}
+
+      {activeTool==='conversor' && <div style={{ background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}`, padding:'24px' }}>
+        <h3 style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:'0 0 4px' }}>Conversor USD ↔ Bs</h3>
+        <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>Conversión rápida entre dólares y bolivianos.</p>
+        <div style={{ display:'flex', marginBottom:'16px', background:colors.inputBg, borderRadius:'10px', border:`1px solid ${colors.border}`, padding:'4px' }}>
+          <button onClick={()=>setConvDir('usd2bs')} style={{ flex:1, padding:'8px', borderRadius:'8px', border:'none', cursor:'pointer', background:convDir==='usd2bs'?colors.accent:'transparent', color:convDir==='usd2bs'?colors.white:colors.textSecondary, fontSize:'13px', fontWeight:'600' }}>USD → Bs</button>
+          <button onClick={()=>setConvDir('bs2usd')} style={{ flex:1, padding:'8px', borderRadius:'8px', border:'none', cursor:'pointer', background:convDir==='bs2usd'?colors.accent:'transparent', color:convDir==='bs2usd'?colors.white:colors.textSecondary, fontSize:'13px', fontWeight:'600' }}>Bs → USD</button>
+        </div>
+        <div style={{ marginBottom:'12px' }}><label style={ls}>{convDir==='usd2bs'?'Monto en USD':'Monto en Bs'}</label><input type="number" style={is} value={convUsd} onChange={e=>setConvUsd(e.target.value)} placeholder={convDir==='usd2bs'?'Ej: 1000':'Ej: 6960'} /></div>
+        <div style={{ marginBottom:'16px' }}><label style={ls}>Tipo de cambio</label><input type="number" step="0.01" style={is} value={convTc} onChange={e=>setConvTc(e.target.value)} /></div>
+        {convResult!==null && <div style={{ padding:'20px', borderRadius:'12px', background:colors.accentLight, border:'1px solid rgba(108,99,255,0.3)', textAlign:'center' }}>
+          <p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>{convDir==='usd2bs'?'Equivalente en Bs':'Equivalente en USD'}</p>
+          <p style={{ color:colors.accent, fontSize:'28px', fontWeight:'700', margin:0 }}>{convDir==='usd2bs'?'Bs':'$'} {convResult.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</p>
+        </div>}
+      </div>}
+
+      {activeTool==='m2' && <div style={{ background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}`, padding:'24px' }}>
+        <h3 style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:'0 0 4px' }}>Precio por m²</h3>
+        <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>Compara el valor real entre propiedades.</p>
+        <div style={{ marginBottom:'12px' }}><label style={ls}>Precio de la propiedad (USD)</label><input type="number" style={is} value={m2Price} onChange={e=>setM2Price(e.target.value)} placeholder="150000" /></div>
+        <div style={{ marginBottom:'16px' }}><label style={ls}>Superficie (m²)</label><input type="number" style={is} value={m2Area} onChange={e=>setM2Area(e.target.value)} placeholder="120" /></div>
+        {m2Result!==null && <div style={{ padding:'20px', borderRadius:'12px', background:colors.accentLight, border:'1px solid rgba(108,99,255,0.3)', textAlign:'center' }}>
+          <p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>Precio por metro cuadrado</p>
+          <p style={{ color:colors.accent, fontSize:'28px', fontWeight:'700', margin:0 }}>$ {m2Result.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')} /m²</p>
+        </div>}
+      </div>}
     </div>
   )
 }
