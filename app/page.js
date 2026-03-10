@@ -362,6 +362,17 @@ function BulkUploadModal({ session, onClose, onSaved }) {
         <div style={{ padding:'20px 24px' }}>
           {error && <div style={{ background:colors.redBg, color:colors.red, padding:'10px 14px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>{error}</div>}
           {success && <div style={{ background:colors.greenBg, color:colors.green, padding:'10px 14px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>{success}</div>}
+          <div style={{ marginBottom:'20px', padding:'16px', background:'rgba(108,99,255,0.08)', borderRadius:'12px', border:'1px solid rgba(108,99,255,0.2)' }}>
+            <p style={{ color:colors.accent, fontSize:'14px', fontWeight:'700', margin:'0 0 10px' }}>📋 Guía rápida para llenar tu archivo</p>
+            <div style={{ color:colors.textSecondary, fontSize:'12px', lineHeight:'1.8' }}>
+              <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>transaccion:</span> escribe <span style={{ color:colors.green }}>venta</span>, <span style={{ color:colors.green }}>alquiler</span>, <span style={{ color:colors.green }}>anticretico</span> o <span style={{ color:colors.green }}>preventa</span></p>
+              <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>tipo:</span> escribe <span style={{ color:colors.green }}>casa</span>, <span style={{ color:colors.green }}>departamento</span>, <span style={{ color:colors.green }}>terreno</span>, <span style={{ color:colors.green }}>oficina</span> o <span style={{ color:colors.green }}>local</span></p>
+              <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>precio_usd:</span> solo números, sin símbolos. Ej: <span style={{ color:colors.green }}>150000</span></p>
+              <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>tipo_cambio:</span> cuántos Bs vale 1 dólar. Ej: <span style={{ color:colors.green }}>6.96</span></p>
+              <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>habitaciones, banos, estacionamientos:</span> solo números. Ej: <span style={{ color:colors.green }}>3</span></p>
+              <p style={{ margin:'0' }}><span style={{ color:colors.text, fontWeight:'600' }}>areas_comunes:</span> separa con | Ej: <span style={{ color:colors.green }}>Piscina|Gimnasio|Jardín</span></p>
+            </div>
+          </div>
           <div style={{ marginBottom:'20px', padding:'16px', background:colors.inputBg, borderRadius:'12px', border:`1px solid ${colors.border}` }}>
             <p style={{ color:colors.text, fontSize:'14px', fontWeight:'600', margin:'0 0 8px' }}>Paso 1: Descarga plantilla</p>
             <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 12px' }}>Incluye precio USD, tipo de cambio y áreas comunes.</p>
@@ -657,7 +668,7 @@ export default function Home() {
             </div>
             <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
               <button onClick={()=>setShowFilters(!showFilters)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:showFilters?colors.accentLight:colors.card, color:showFilters?colors.accent:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{Icons.filter} Filtros</button>
-              <button onClick={()=>setShowBulkUpload(true)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:colors.card, color:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{Icons.upload} Excel</button>
+              <button onClick={()=>setShowBulkUpload(true)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:colors.card, color:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{Icons.upload} Carga rápida</button>
               <button onClick={()=>{setEditProperty(null);setShowForm(true)}} style={{ padding:'8px 12px', borderRadius:'10px', border:'none', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'600' }}>{Icons.plus} Nueva</button>
             </div>
           </div>
