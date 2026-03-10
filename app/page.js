@@ -631,7 +631,7 @@ export default function Home() {
     ${property.photos?.length?`<div class="photos">${property.photos.map(u=>`<img src="${u}"/>`).join('')}</div>`:''}
     <div class="agent"><div><div style="font-size:12px;opacity:0.8">Contacto</div><div style="font-size:18px;font-weight:600">${agent?.full_name||'Sin asignar'}</div></div>
     <div style="text-align:right"><div style="font-size:12px;opacity:0.8">Teléfono</div><div style="font-size:18px;font-weight:600">${agent?.phone||'-'}</div></div></div>
-    <button class="btn no-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button></body></html>`
+    <button class="btn no-print" onclick="window.print()">📥 Descargar Brochure</button></body></html>`
     const w = window.open('','_blank'); w.document.write(html); w.document.close()
   }
 
