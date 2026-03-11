@@ -713,8 +713,7 @@ export default function Home() {
                   const ag=agents.find(a=>a.id===p.agent_id)
                   return `<div class="card"><div class="card-header"><div style="display:flex;justify-content:space-between;align-items:start"><div><p class="card-title">${p.title}</p><p class="card-loc">📍 ${p.zone}${p.address?' · '+p.address:''}</p></div><div style="text-align:right"><p class="card-price">$ ${Number(p.price).toLocaleString('en-US')}</p><p style="font-size:11px;color:#888;margin:2px 0 0">${opLabels[p.operation_type]} · ${typeLabels[p.property_type]}</p></div></div></div>
                   <div class="card-body">${p.bedrooms>0?'<span class="card-feat">🛏 '+p.bedrooms+' hab</span>':''}${p.bathrooms>0?'<span class="card-feat">🚿 '+p.bathrooms+' baños</span>':''}${p.area_m2?'<span class="card-feat">📐 '+p.area_m2+' m²</span>':''}${p.parking_spots>0?'<span class="card-feat">🚗 '+p.parking_spots+' estac.</span>':''}</div>
-                  ${p.common_areas?.length>0?'<div class="card-areas">✨ '+p.common_areas.join(' · ')+'</div>':''}
-                  <div class="card-agent">👤 ${ag?.full_name||'Sin asignar'}${ag?.phone?' · 📞 '+ag.phone:''}</div></div>`
+                  ${p.common_areas?.length>0?'<div class="card-areas">✨ '+p.common_areas.join(' · ')+'</div>':''}</div>`
                 }).join('')}</div>
                 <button class="btn no-print" onclick="window.print()">📥 Descargar PDF</button></body></html>`
                 const w=window.open('','_blank');w.document.write(html);w.document.close()
