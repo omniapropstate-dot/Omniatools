@@ -89,6 +89,7 @@ function LoginScreen({ onLogin }) {
           <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px', background:loading?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:loading?'not-allowed':'pointer', boxSizing:'border-box' }}>{loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}</button>
         </form>
         <div style={{ textAlign:'center', marginTop:'20px' }}><button onClick={() => { setIsSignUp(!isSignUp); setError('') }} style={{ background:'none', border:'none', color:colors.accent, fontSize:'14px', cursor:'pointer', textDecoration:'underline' }}>{isSignUp ? 'Ya tengo cuenta → Iniciar sesión' : 'No tengo cuenta → Registrarme'}</button></div>
+        {!isSignUp && <div style={{ textAlign:'center', marginTop:'12px' }}><button onClick={async () => { if(!email){setError('Escribe tu correo primero');return}; setError(''); const{error:err}=await supabase.auth.resetPasswordForEmail(email); if(err){setError(err.message)}else{setError('Te enviamos un correo para recuperar tu contraseña. Revisa tu bandeja.')} }} style={{ background:'none', border:'none', color:colors.textMuted, fontSize:'13px', cursor:'pointer' }}>¿Olvidaste tu contraseña?</button></div>}
       </div>
     </div>
   )
