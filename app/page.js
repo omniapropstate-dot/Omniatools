@@ -678,6 +678,35 @@ export default function Home() {
             <button onClick={()=>setPropView('mine')} style={{ padding:'8px 16px', borderRadius:'8px', border:'none', cursor:'pointer', background:propView==='mine'?colors.accent:'transparent', color:propView==='mine'?colors.white:colors.textSecondary, fontSize:'13px', fontWeight:'600' }}>Mis propiedades</button>
           </div>
           {showFilters && <FiltersPanel filters={filters} setFilters={setFilters} zones={zones} />}
+          {filteredProperties.length>0 && filteredProperties.length!==properties.length && (
+            <div style={{ marginBottom:'14px' }}>
+              <button onClick={()=>{
+                const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Resumen de Propiedades</title>
+                <style>body{font-family:'Segoe UI',sans-serif;max-width:900px;margin:0 auto;padding:24px;color:#222}
+                .header{background:linear-gradient(135deg,#1B4F72,#6C63FF);color:white;padding:24px;border-radius:16px;margin-bottom:24px}
+                .header h1{margin:0;font-size:24px}.header p{margin:8px 0 0;opacity:0.9;font-size:14px}
+                .grid{display:grid;gap:16px}.card{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;page-break-inside:avoid}
+                .card-header{padding:16px;background:#f8f9fa}.card-title{font-size:16px;font-weight:700;margin:0 0 4px}
+                .card-price{font-size:20px;font-weight:700;color:#6C63FF;margin:0}.card-loc{font-size:13px;color:#666;margin:4px 0 0}
+                .card-body{padding:12px 16px;display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#555}
+                .card-feat{background:#f1f5f9;padding:4px 10px;border-radius:6px}
+                .card-areas{padding:8px 16px 16px;font-size:12px;color:#666}
+                .card-agent{padding:10px 16px;background:#f1f5f9;font-size:13px;border-top:1px solid #e2e8f0}
+                .btn{display:block;width:100%;padding:14px;background:#6C63FF;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:24px;box-sizing:border-box}
+                @media print{.no-print{display:none}}</style></head><body>
+                <div class="header"><h1>Resumen de Propiedades</h1><p>${filteredProperties.length} propiedades encontradas · ${new Date().toLocaleDateString('es-BO')}</p></div>
+                <div class="grid">${filteredProperties.map(p=>{
+                  const ag=agents.find(a=>a.id===p.agent_id)
+                  return `<div class="card"><div class="card-header"><div style="display:flex;justify-content:space-between;align-items:start"><div><p class="card-title">${p.title}</p><p class="card-loc">📍 ${p.zone}${p.address?' · '+p.address:''}</p></div><div style="text-align:right"><p class="card-price">$ ${Number(p.price).toLocaleString('en-US')}</p><p style="font-size:11px;color:#888;margin:2px 0 0">${opLabels[p.operation_type]} · ${typeLabels[p.property_type]}</p></div></div></div>
+                  <div class="card-body">${p.bedrooms>0?'<span class="card-feat">🛏 '+p.bedrooms+' hab</span>':''}${p.bathrooms>0?'<span class="card-feat">🚿 '+p.bathrooms+' baños</span>':''}${p.area_m2?'<span class="card-feat">📐 '+p.area_m2+' m²</span>':''}${p.parking_spots>0?'<span class="card-feat">🚗 '+p.parking_spots+' estac.</span>':''}</div>
+                  ${p.common_areas?.length>0?'<div class="card-areas">✨ '+p.common_areas.join(' · ')+'</div>':''}
+                  <div class="card-agent">👤 ${ag?.full_name||'Sin asignar'}${ag?.phone?' · 📞 '+ag.phone:''}</div></div>`
+                }).join('')}</div>
+                <button class="btn no-print" onclick="window.print()">📥 Descargar PDF</button></body></html>`
+                const w=window.open('','_blank');w.document.write(html);w.document.close()
+              }} style={{ padding:'8px 14px', borderRadius:'10px', border:`1px solid ${colors.green}`, background:colors.greenBg, color:colors.green, cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', fontSize:'13px', fontWeight:'600' }}>{Icons.download} Descargar resumen ({filteredProperties.length})</button>
+            </div>
+          )}
           {filteredProperties.length===0 ? (
             <div style={{ textAlign:'center', padding:'50px 20px', color:colors.textSecondary, background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}` }}>
               <div style={{ fontSize:'40px', marginBottom:'12px' }}>🏠</div>
