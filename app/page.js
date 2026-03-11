@@ -673,9 +673,23 @@ export default function Home() {
               <button onClick={()=>{setEditProperty(null);setShowForm(true)}} style={{ padding:'8px 12px', borderRadius:'10px', border:'none', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'600' }}>{Icons.plus} Nueva</button>
             </div>
           </div>
-          <div style={{ display:'flex', marginBottom:'14px', background:colors.card, borderRadius:'10px', border:`1px solid ${colors.border}`, padding:'4px', width:'fit-content' }}>
-            <button onClick={()=>setPropView('all')} style={{ padding:'8px 16px', borderRadius:'8px', border:'none', cursor:'pointer', background:propView==='all'?colors.accent:'transparent', color:propView==='all'?colors.white:colors.textSecondary, fontSize:'13px', fontWeight:'600' }}>Todas</button>
-            <button onClick={()=>setPropView('mine')} style={{ padding:'8px 16px', borderRadius:'8px', border:'none', cursor:'pointer', background:propView==='mine'?colors.accent:'transparent', color:propView==='mine'?colors.white:colors.textSecondary, fontSize:'13px', fontWeight:'600' }}>Mis propiedades</button>
+          <div style={{ display:'flex', gap:'10px', alignItems:'center', marginBottom:'14px', flexWrap:'wrap' }}>
+            <div style={{ display:'flex', background:colors.card, borderRadius:'10px', border:`1px solid ${colors.border}`, padding:'4px' }}>
+              <button onClick={()=>setPropView('all')} style={{ padding:'8px 16px', borderRadius:'8px', border:'none', cursor:'pointer', background:propView==='all'?colors.accent:'transparent', color:propView==='all'?colors.white:colors.textSecondary, fontSize:'13px', fontWeight:'600' }}>Todas</button>
+              <button onClick={()=>setPropView('mine')} style={{ padding:'8px 16px', borderRadius:'8px', border:'none', cursor:'pointer', background:propView==='mine'?colors.accent:'transparent', color:propView==='mine'?colors.white:colors.textSecondary, fontSize:'13px', fontWeight:'600' }}>Mis propiedades</button>
+            </div>
+            {propView==='mine' && filteredProperties.length>0 && (
+              <button onClick={()=>{
+                const myProps=filteredProperties
+                const h='titulo,transaccion,tipo,precio_usd,tipo_cambio,zona,direccion,habitaciones,banos,area_m2,estacionamientos,areas_comunes'
+                const rows=myProps.map(p=>[p.title,p.operation_type,p.property_type,p.price,p.exchange_rate||'',p.zone,p.address||'',p.bedrooms,p.bathrooms,p.area_m2||'',p.parking_spots,p.common_areas?.join('|')||''].map(v=>String(v).includes(',')?`"${v}"`:v).join(','))
+                const csv=[h,...rows].join('\n')
+                const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})
+                const url=URL.createObjectURL(blob)
+                const a=document.createElement('a');a.href=url;a.download='mis_propiedades.csv';a.click()
+                URL.revokeObjectURL(url)
+              }} style={{ padding:'8px 14px', borderRadius:'10px', border:`1px solid ${colors.accent}`, background:'transparent', color:colors.accent, cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', fontSize:'12px', fontWeight:'600' }}>{Icons.download} Exportar CSV</button>
+            )}
           </div>
           {showFilters && <FiltersPanel filters={filters} setFilters={setFilters} zones={zones} />}
           {filteredProperties.length>0 && filteredProperties.length!==properties.length && (
