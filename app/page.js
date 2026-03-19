@@ -557,6 +557,7 @@ function ProfileScreen({ session, currentUser, onSaved }) {
 export default function Home() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showResetPassword, setShowResetPassword] = useState(false)
   const [properties, setProperties] = useState([])
   const [agents, setAgents] = useState([])
   const [view, setView] = useState('properties')
@@ -570,7 +571,10 @@ export default function Home() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({data:{session}})=>{setSession(session);setLoading(false)})
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{setSession(session)})
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{
+      setSession(session)
+      if(event==='PASSWORD_RECOVERY') setShowResetPassword(true)
+    })
     return ()=>subscription.unsubscribe()
   },[])
 
@@ -640,6 +644,40 @@ export default function Home() {
 
   if(loading) return <div style={{ minHeight:'100vh', background:colors.bg, display:'flex', alignItems:'center', justifyContent:'center', color:colors.text }}>Cargando...</div>
   if(!session) return <LoginScreen onLogin={setSession} />
+
+  if(showResetPassword) {
+    const ResetBox = () => {
+      const [newPass, setNewPass] = useState('')
+      const [confirm, setConfirm] = useState('')
+      const [err, setErr] = useState('')
+      const [ok, setOk] = useState(false)
+      const handleReset = async () => {
+        if(newPass.length<6){setErr('La contraseña debe tener al menos 6 caracteres');return}
+        if(newPass!==confirm){setErr('Las contraseñas no coinciden');return}
+        setErr('')
+        const{error}=await supabase.auth.updateUser({password:newPass})
+        if(error){setErr(error.message)}else{setOk(true);setTimeout(()=>setShowResetPassword(false),2000)}
+      }
+      const is={width:'100%',padding:'12px 16px',background:colors.inputBg,border:`1px solid ${colors.border}`,borderRadius:'10px',color:colors.text,fontSize:'14px',outline:'none',boxSizing:'border-box'}
+      return (
+        <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:`linear-gradient(135deg, ${colors.bg} 0%, #1a1040 50%, ${colors.bg} 100%)`, padding:'20px' }}>
+          <div style={{ width:'100%', maxWidth:'420px', background:colors.card, borderRadius:'20px', padding:'40px 32px', border:`1px solid ${colors.border}` }}>
+            <div style={{ textAlign:'center', marginBottom:'24px' }}>
+              <div style={{ fontSize:'40px', marginBottom:'12px' }}>🔐</div>
+              <h1 style={{ color:colors.text, fontSize:'22px', fontWeight:'700', margin:'0 0 4px' }}>Nueva contraseña</h1>
+              <p style={{ color:colors.textSecondary, fontSize:'14px', margin:0 }}>Escribe tu nueva contraseña</p>
+            </div>
+            {err && <div style={{ background:colors.redBg, color:colors.red, padding:'12px 16px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>{err}</div>}
+            {ok && <div style={{ background:colors.greenBg, color:colors.green, padding:'12px 16px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>Contraseña actualizada. Redirigiendo...</div>}
+            <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Nueva contraseña</label><input type="password" style={is} value={newPass} onChange={e=>setNewPass(e.target.value)} placeholder="Mínimo 6 caracteres" /></div>
+            <div style={{ marginBottom:'24px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Confirmar contraseña</label><input type="password" style={is} value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="Repite tu contraseña" /></div>
+            <button onClick={handleReset} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Cambiar contraseña</button>
+          </div>
+        </div>
+      )
+    }
+    return <ResetBox />
+  }
   const currentUser = agents.find(a=>a.id===session.user?.id)
 
   return (
