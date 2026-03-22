@@ -635,6 +635,8 @@ export default function Home() {
   const [showClientForm, setShowClientForm] = useState(false)
   const [editClient, setEditClient] = useState(null)
   const [clientFilters, setClientFilters] = useState({ status:'', operation:'', type:'' })
+  const [matchClient, setMatchClient] = useState(null)
+  const [showVcfImport, setShowVcfImport] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({data:{session}})=>{setSession(session);setLoading(false)})
@@ -861,6 +863,7 @@ export default function Home() {
                   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})
                   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='mis_clientes.csv';a.click();URL.revokeObjectURL(url)
                 }} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{Icons.download} Exportar</button>
+                <button onClick={()=>setShowVcfImport(true)} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{Icons.upload} Importar contactos</button>
                 <button onClick={()=>{setEditClient(null);setShowClientForm(true)}} style={{padding:'8px 12px',borderRadius:'10px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'600'}}>{Icons.plus} Nuevo cliente</button>
               </div>
             </div>
@@ -909,6 +912,7 @@ export default function Home() {
                     {c.phone&&<p style={{color:colors.textSecondary,fontSize:'12px',margin:'0 0 4px'}}>📞 {c.phone}</p>}
                     {c.notes&&<p style={{color:colors.textMuted,fontSize:'11px',margin:'0 0 10px',fontStyle:'italic'}}>{c.notes}</p>}
                     <div style={{display:'flex',gap:'6px'}}>
+                      <button onClick={()=>setMatchClient(c)} style={{flex:1,padding:'8px',background:colors.greenBg,border:'1px solid rgba(52,211,153,0.3)',color:colors.green,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'center',gap:'4px'}}>🔍 Match</button>
                       <button onClick={()=>{setEditClient(c);setShowClientForm(true)}} style={{flex:1,padding:'8px',background:colors.accentLight,border:'1px solid rgba(108,99,255,0.3)',color:colors.accent,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'center',gap:'4px'}}>{Icons.edit} Editar</button>
                       <button onClick={()=>{if(confirm('¿Eliminar este cliente?'))supabase.from('clients').delete().eq('id',c.id).then(()=>loadData())}} style={{padding:'8px 12px',background:colors.redBg,border:'1px solid rgba(248,113,113,0.3)',color:colors.red,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600'}}>🗑</button>
                     </div>
@@ -926,6 +930,119 @@ export default function Home() {
       {viewProperty && <PropertyDetail property={viewProperty} agents={agents} onClose={()=>setViewProperty(null)} onBrochure={generateBrochure} />}
       {showBulkUpload && <BulkUploadModal session={session} onClose={()=>setShowBulkUpload(false)} onSaved={()=>{setShowBulkUpload(false);loadData()}} />}
       {showClientForm && <ClientFormModal client={editClient} session={session} onClose={()=>{setShowClientForm(false);setEditClient(null)}} onSaved={()=>{setShowClientForm(false);setEditClient(null);loadData()}} />}
+      {matchClient && (()=>{
+        const c=matchClient
+        const matched=properties.filter(p=>{
+          if(c.budget_max&&Number(p.price)>Number(c.budget_max)) return false
+          if(c.budget_min&&Number(p.price)<Number(c.budget_min)) return false
+          if(c.operation_type&&p.operation_type!==c.operation_type) return false
+          if(c.property_type&&p.property_type!==c.property_type) return false
+          if(c.bedrooms_min&&p.bedrooms<c.bedrooms_min) return false
+          if(c.bathrooms_min&&p.bathrooms<c.bathrooms_min) return false
+          if(c.preferred_zones?.length>0&&!c.preferred_zones.some(z=>p.zone?.toLowerCase().includes(z.toLowerCase()))) return false
+          return true
+        })
+        return <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:'16px'}}>
+          <div style={{background:colors.card,borderRadius:'20px',width:'100%',maxWidth:'700px',maxHeight:'90vh',overflow:'auto',border:`1px solid ${colors.border}`}}>
+            <div style={{padding:'20px 24px',borderBottom:`1px solid ${colors.border}`,display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,background:colors.card,zIndex:1,borderRadius:'20px 20px 0 0'}}>
+              <div><h2 style={{color:colors.text,fontSize:'18px',fontWeight:'600',margin:0}}>Match para {c.full_name}</h2><p style={{color:colors.textSecondary,fontSize:'13px',margin:'4px 0 0'}}>{matched.length} propiedades encontradas</p></div>
+              <button onClick={()=>setMatchClient(null)} style={{background:'none',border:'none',color:colors.textSecondary,cursor:'pointer'}}>{Icons.x}</button>
+            </div>
+            <div style={{padding:'20px 24px'}}>
+              {c.budget_max&&<div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'16px'}}>
+                <span style={{padding:'4px 10px',background:colors.accentLight,color:colors.accent,borderRadius:'6px',fontSize:'12px'}}>💰 ${Number(c.budget_min||0).toLocaleString('en-US')} - ${Number(c.budget_max).toLocaleString('en-US')}</span>
+                {c.operation_type&&<span style={{padding:'4px 10px',background:colors.accentLight,color:colors.accent,borderRadius:'6px',fontSize:'12px'}}>{opLabels[c.operation_type]}</span>}
+                {c.property_type&&<span style={{padding:'4px 10px',background:colors.accentLight,color:colors.accent,borderRadius:'6px',fontSize:'12px'}}>{typeLabels[c.property_type]}</span>}
+                {c.preferred_zones?.map(z=><span key={z} style={{padding:'4px 10px',background:colors.accentLight,color:colors.accent,borderRadius:'6px',fontSize:'12px'}}>📍{z}</span>)}
+              </div>}
+              {matched.length===0?<div style={{textAlign:'center',padding:'40px',color:colors.textSecondary}}><div style={{fontSize:'40px',marginBottom:'12px'}}>😕</div><p style={{fontSize:'16px',color:colors.text,margin:'0 0 4px'}}>No hay propiedades que coincidan</p><p style={{fontSize:'13px',margin:0}}>Ajusta los criterios del cliente o espera nuevas propiedades</p></div>
+              :<div style={{display:'flex',flexDirection:'column',gap:'12px'}}>{matched.map(p=>{
+                const ag=agents.find(a=>a.id===p.agent_id)
+                return <div key={p.id} style={{display:'flex',gap:'14px',padding:'14px',background:colors.inputBg,borderRadius:'12px',border:`1px solid ${colors.border}`,alignItems:'center',flexWrap:'wrap'}}>
+                  <div style={{width:'80px',height:'80px',borderRadius:'10px',background:p.photos?.length?`url(${p.photos[0]}) center/cover`:'linear-gradient(135deg,#2a2040,#1a1530)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>{!p.photos?.length&&<span style={{fontSize:'24px'}}>🏠</span>}</div>
+                  <div style={{flex:1,minWidth:'200px'}}>
+                    <h4 style={{color:colors.text,fontSize:'14px',fontWeight:'600',margin:'0 0 4px'}}>{p.title}</h4>
+                    <p style={{color:colors.accent,fontSize:'16px',fontWeight:'700',margin:'0 0 4px'}}>$ {Number(p.price).toLocaleString('en-US')}</p>
+                    <p style={{color:colors.textSecondary,fontSize:'12px',margin:'0 0 6px'}}>📍 {p.zone} · {opLabels[p.operation_type]} · {typeLabels[p.property_type]}</p>
+                    <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>{p.bedrooms>0&&<span style={{color:colors.textMuted,fontSize:'11px'}}>{Icons.bed} {p.bedrooms}</span>}{p.bathrooms>0&&<span style={{color:colors.textMuted,fontSize:'11px'}}>{Icons.bath} {p.bathrooms}</span>}{p.area_m2&&<span style={{color:colors.textMuted,fontSize:'11px'}}>{Icons.area} {p.area_m2}m²</span>}</div>
+                    {ag&&<p style={{color:colors.textMuted,fontSize:'11px',margin:'6px 0 0'}}>👤 {ag.full_name}{ag.phone?' · '+ag.phone:''}</p>}
+                  </div>
+                  <button onClick={()=>{const msg=`🏠 *${p.title}*%0A💰 $${Number(p.price).toLocaleString('en-US')}%0A📍 ${p.zone}%0A${p.bedrooms>0?'🛏 '+p.bedrooms+' hab · ':''}${p.bathrooms>0?'🚿 '+p.bathrooms+' baños · ':''}${p.area_m2?'📐 '+p.area_m2+'m²':''}%0A%0A📞 ${ag?.full_name||''} - ${ag?.phone||''}`;window.open('https://wa.me/'+c.phone?.replace(/\D/g,'')+'?text='+msg,'_blank')}} style={{padding:'8px 12px',background:'#25D366',color:colors.white,border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'11px',fontWeight:'600',whiteSpace:'nowrap'}}>📤 Enviar</button>
+                </div>
+              })}</div>}
+            </div>
+          </div>
+        </div>
+      })()}
+      {showVcfImport && (()=>{
+        const VcfModal = () => {
+          const [contacts, setContacts] = useState([])
+          const [importing, setImporting] = useState(false)
+          const [error, setError] = useState('')
+          const [success, setSuccess] = useState('')
+          const fileRef = useRef()
+          const parseVcf = (text) => {
+            const cards = text.split('BEGIN:VCARD').filter(c=>c.includes('END:VCARD'))
+            return cards.map(card=>{
+              const nameMatch = card.match(/FN[;:](.+)/i)
+              const telMatch = card.match(/TEL[;:].*?:?(\+?[\d\s\-]+)/i) || card.match(/TEL.*?(\+?[\d\s\-]+)/i)
+              const name = nameMatch ? nameMatch[1].replace(/\r|\n/g,'').trim() : ''
+              const phone = telMatch ? telMatch[1].replace(/[\s\-\r\n]/g,'').trim() : ''
+              return { name, phone }
+            }).filter(c=>c.name)
+          }
+          const handleFile = async (e) => {
+            const f=e.target.files[0]; if(!f) return; setError('')
+            const text = await f.text()
+            const parsed = parseVcf(text)
+            if(parsed.length===0){setError('No se encontraron contactos en el archivo');return}
+            setContacts(parsed)
+          }
+          const handleImport = async () => {
+            if(!contacts.length) return; setImporting(true); setError('')
+            const rows = contacts.map(c=>({agent_id:session.user.id,full_name:c.name,phone:c.phone,is_complete:false,status:'activo'}))
+            const{error:err}=await supabase.from('clients').insert(rows)
+            if(err){setError('Error: '+err.message)}else{setSuccess(`${contacts.length} contactos importados`);setTimeout(()=>{setShowVcfImport(false);loadData()},1500)}
+            setImporting(false)
+          }
+          return <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:'16px'}}>
+            <div style={{background:colors.card,borderRadius:'20px',width:'100%',maxWidth:'550px',maxHeight:'90vh',overflow:'auto',border:`1px solid ${colors.border}`}}>
+              <div style={{padding:'20px 24px',borderBottom:`1px solid ${colors.border}`,display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,background:colors.card,zIndex:1,borderRadius:'20px 20px 0 0'}}>
+                <h2 style={{color:colors.text,fontSize:'18px',fontWeight:'600',margin:0}}>Importar contactos</h2>
+                <button onClick={()=>setShowVcfImport(false)} style={{background:'none',border:'none',color:colors.textSecondary,cursor:'pointer'}}>{Icons.x}</button>
+              </div>
+              <div style={{padding:'20px 24px'}}>
+                {error&&<div style={{background:colors.redBg,color:colors.red,padding:'10px 14px',borderRadius:'10px',fontSize:'13px',marginBottom:'16px'}}>{error}</div>}
+                {success&&<div style={{background:colors.greenBg,color:colors.green,padding:'10px 14px',borderRadius:'10px',fontSize:'13px',marginBottom:'16px'}}>{success}</div>}
+                <div style={{marginBottom:'20px',padding:'16px',background:'rgba(108,99,255,0.08)',borderRadius:'12px',border:'1px solid rgba(108,99,255,0.2)'}}>
+                  <p style={{color:colors.accent,fontSize:'14px',fontWeight:'700',margin:'0 0 8px'}}>📱 ¿Cómo exportar tus contactos?</p>
+                  <div style={{color:colors.textSecondary,fontSize:'12px',lineHeight:'1.8'}}>
+                    <p style={{margin:'0 0 4px'}}><span style={{color:colors.text,fontWeight:'600'}}>Android:</span> Contactos → Menú (⋮) → Exportar → Guardar como .vcf</p>
+                    <p style={{margin:0}}><span style={{color:colors.text,fontWeight:'600'}}>iPhone:</span> Configuración → Contactos → Exportar contactos vCard</p>
+                  </div>
+                </div>
+                <div style={{marginBottom:'20px',padding:'16px',background:colors.inputBg,borderRadius:'12px',border:`1px solid ${colors.border}`}}>
+                  <p style={{color:colors.text,fontSize:'14px',fontWeight:'600',margin:'0 0 12px'}}>Sube tu archivo .vcf</p>
+                  <button onClick={()=>fileRef.current?.click()} style={{padding:'10px 16px',borderRadius:'8px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'6px',fontSize:'13px',fontWeight:'600'}}>{Icons.upload} Seleccionar archivo .vcf</button>
+                  <input ref={fileRef} type="file" accept=".vcf" hidden onChange={handleFile} />
+                </div>
+                {contacts.length>0&&<div>
+                  <p style={{color:colors.text,fontSize:'14px',fontWeight:'600',margin:'0 0 12px'}}>{contacts.length} contactos encontrados</p>
+                  <div style={{maxHeight:'200px',overflow:'auto',borderRadius:'10px',border:`1px solid ${colors.border}`}}>
+                    {contacts.map((c,i)=><div key={i} style={{padding:'10px 14px',borderBottom:i<contacts.length-1?`1px solid ${colors.border}`:'none',background:i%2===0?colors.inputBg:colors.card,display:'flex',justifyContent:'space-between'}}>
+                      <span style={{color:colors.text,fontSize:'13px',fontWeight:'600'}}>{c.name}</span>
+                      <span style={{color:colors.textMuted,fontSize:'13px'}}>{c.phone||'Sin teléfono'}</span>
+                    </div>)}
+                  </div>
+                  <p style={{color:colors.yellow,fontSize:'12px',margin:'10px 0'}}>⚠ Los contactos se importarán con perfil incompleto. Podrás completar sus criterios después.</p>
+                  <button onClick={handleImport} disabled={importing} style={{width:'100%',padding:'14px',marginTop:'8px',background:importing?colors.textMuted:colors.green,color:colors.white,border:'none',borderRadius:'10px',fontSize:'15px',fontWeight:'600',cursor:importing?'not-allowed':'pointer'}}>{importing?'Importando...':'Importar '+contacts.length+' contactos'}</button>
+                </div>}
+              </div>
+            </div>
+          </div>
+        }
+        return <VcfModal />
+      })()}
     </div>
   )
 }
