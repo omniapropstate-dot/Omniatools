@@ -19,6 +19,23 @@ const colors = {
 }
 
 const COMMON_AREAS = ['Piscina','Parrillero/BBQ','Sala de reuniones','Gimnasio','Jardín','Salón de eventos','Área de juegos infantiles','Cancha deportiva','Lavandería común','Estacionamiento de visitas']
+const compressImage = (file, maxWidth=1200, quality=0.7) => new Promise((resolve) => {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      let w = img.width, h = img.height
+      if (w > maxWidth) { h = (maxWidth / w) * h; w = maxWidth }
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality)
+    }
+    img.src = e.target.result
+  }
+  reader.readAsDataURL(file)
+})
+
 const opLabels = { venta:'Venta', alquiler:'Alquiler', anticretico:'Anticrético', preventa:'Preventa' }
 const typeLabels = { casa:'Casa', departamento:'Departamento', terreno:'Terreno', oficina:'Oficina', local_comercial:'Local comercial', otro:'Otro' }
 
@@ -180,8 +197,9 @@ function PropertyFormModal({ property, session, onClose, onSaved }) {
     setUploading(true); setError('')
     const np = [...photos]
     for (const file of files) {
-      const fn = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g,'_')}`
-      const { error:upErr } = await supabase.storage.from('property-photos').upload(fn, file)
+      const compressed = await compressImage(file)
+      const fn = `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`
+      const { error:upErr } = await supabase.storage.from('property-photos').upload(fn, compressed, {contentType:'image/jpeg'})
       if (!upErr) { const { data:u } = supabase.storage.from('property-photos').getPublicUrl(fn); np.push(u.publicUrl) }
     }
     setPhotos(np); setUploading(false)
@@ -579,8 +597,9 @@ function ProfileScreen({ session, currentUser, onSaved }) {
   const fileRef = useRef()
   const handleAvatarUpload = async (e) => {
     const file=e.target.files[0]; if(!file) return; setUploading(true); setError('')
-    const fn=`avatar_${session.user.id}_${Date.now()}`
-    const {error:upErr}=await supabase.storage.from('property-photos').upload(fn,file)
+    const compressed = await compressImage(file, 400, 0.7)
+    const fn=`avatar_${session.user.id}_${Date.now()}.jpg`
+    const {error:upErr}=await supabase.storage.from('property-photos').upload(fn,compressed,{contentType:'image/jpeg'})
     if(!upErr){const{data:u}=supabase.storage.from('property-photos').getPublicUrl(fn);setAvatarUrl(u.publicUrl)}
     else{setError('Error: '+upErr.message)}
     setUploading(false)
