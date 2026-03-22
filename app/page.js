@@ -400,6 +400,69 @@ function BulkUploadModal({ session, onClose, onSaved }) {
   )
 }
 
+function ClientFormModal({ client, session, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    full_name:client?.full_name||'', phone:client?.phone||'', email:client?.email||'',
+    budget_min:client?.budget_min||'', budget_max:client?.budget_max||'',
+    operation_type:client?.operation_type||'', property_type:client?.property_type||'',
+    preferred_zones:client?.preferred_zones||[], bedrooms_min:client?.bedrooms_min||0,
+    bathrooms_min:client?.bathrooms_min||0, status:client?.status||'activo', notes:client?.notes||'',
+  })
+  const [zoneInput, setZoneInput] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const addZone = () => { if(zoneInput.trim()&&!form.preferred_zones.includes(zoneInput.trim())){setForm(f=>({...f,preferred_zones:[...f.preferred_zones,zoneInput.trim()]}));setZoneInput('')} }
+  const removeZone = (z) => setForm(f=>({...f,preferred_zones:f.preferred_zones.filter(x=>x!==z)}))
+  const handleSave = async () => {
+    if(!form.full_name){setError('El nombre es obligatorio');return}
+    setSaving(true);setError('')
+    const isComplete = !!(form.budget_max&&form.operation_type&&form.property_type)
+    const payload = {...form, agent_id:session.user.id, is_complete:isComplete}
+    if(client?.id){
+      const{error:err}=await supabase.from('clients').update(payload).eq('id',client.id)
+      if(err){setError('Error: '+err.message);setSaving(false);return}
+    }else{
+      const{error:err}=await supabase.from('clients').insert(payload)
+      if(err){setError('Error: '+err.message);setSaving(false);return}
+    }
+    setSaving(false);onSaved()
+  }
+  const is={width:'100%',padding:'10px 14px',background:colors.inputBg,border:`1px solid ${colors.border}`,borderRadius:'10px',color:colors.text,fontSize:'14px',outline:'none',boxSizing:'border-box'}
+  const ls={color:colors.textSecondary,fontSize:'12px',fontWeight:'500',display:'block',marginBottom:'4px'}
+  const nums=[0,1,2,3,4,5,6,7,8,9,10]
+  return (
+    <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:'16px'}}>
+      <div style={{background:colors.card,borderRadius:'20px',width:'100%',maxWidth:'600px',maxHeight:'90vh',overflow:'auto',border:`1px solid ${colors.border}`}}>
+        <div style={{padding:'20px 24px',borderBottom:`1px solid ${colors.border}`,display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,background:colors.card,zIndex:1,borderRadius:'20px 20px 0 0'}}>
+          <h2 style={{color:colors.text,fontSize:'18px',fontWeight:'600',margin:0}}>{client?'Editar cliente':'Nuevo cliente'}</h2>
+          <button onClick={onClose} style={{background:'none',border:'none',color:colors.textSecondary,cursor:'pointer'}}>{Icons.x}</button>
+        </div>
+        <div style={{padding:'20px 24px'}}>
+          {error&&<div style={{background:colors.redBg,color:colors.red,padding:'10px 14px',borderRadius:'10px',fontSize:'13px',marginBottom:'16px'}}>{error}</div>}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+            <div style={{gridColumn:'1/-1'}}><label style={ls}>Nombre completo *</label><input style={is} value={form.full_name} onChange={e=>setForm(f=>({...f,full_name:e.target.value}))} placeholder="Nombre del cliente" /></div>
+            <div><label style={ls}>Teléfono</label><input type="tel" style={is} value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="70012345" /></div>
+            <div><label style={ls}>Correo</label><input type="email" style={is} value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="correo@mail.com" /></div>
+            <div><label style={ls}>Presupuesto mín (USD)</label><input type="number" style={is} value={form.budget_min} onChange={e=>setForm(f=>({...f,budget_min:e.target.value}))} placeholder="50000" /></div>
+            <div><label style={ls}>Presupuesto máx (USD)</label><input type="number" style={is} value={form.budget_max} onChange={e=>setForm(f=>({...f,budget_max:e.target.value}))} placeholder="150000" /></div>
+            <div><label style={ls}>Tipo de transacción</label><select style={is} value={form.operation_type} onChange={e=>setForm(f=>({...f,operation_type:e.target.value}))}><option value="">Sin definir</option><option value="venta">Venta</option><option value="alquiler">Alquiler</option><option value="anticretico">Anticrético</option><option value="preventa">Preventa</option></select></div>
+            <div><label style={ls}>Tipo de propiedad</label><select style={is} value={form.property_type} onChange={e=>setForm(f=>({...f,property_type:e.target.value}))}><option value="">Sin definir</option><option value="casa">Casa</option><option value="departamento">Departamento</option><option value="terreno">Terreno</option><option value="oficina">Oficina</option><option value="local_comercial">Local</option></select></div>
+            <div><label style={ls}>Habitaciones mín</label><select style={is} value={form.bedrooms_min} onChange={e=>setForm(f=>({...f,bedrooms_min:parseInt(e.target.value)}))}>{nums.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+            <div><label style={ls}>Baños mín</label><select style={is} value={form.bathrooms_min} onChange={e=>setForm(f=>({...f,bathrooms_min:parseInt(e.target.value)}))}>{nums.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+            <div><label style={ls}>Estado</label><select style={is} value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="cerrado">Cerrado</option></select></div>
+          </div>
+          <div style={{marginTop:'12px'}}><label style={ls}>Zonas preferidas</label>
+            <div style={{display:'flex',gap:'6px',marginBottom:'8px'}}><input style={{...is,flex:1}} value={zoneInput} onChange={e=>setZoneInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addZone()} placeholder="Escribe zona y presiona +" /><button onClick={addZone} style={{padding:'10px 14px',background:colors.accent,color:colors.white,border:'none',borderRadius:'10px',cursor:'pointer',fontWeight:'700'}}>+</button></div>
+            {form.preferred_zones.length>0&&<div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>{form.preferred_zones.map(z=><span key={z} style={{padding:'4px 10px',background:colors.accentLight,color:colors.accent,borderRadius:'6px',fontSize:'12px',display:'flex',alignItems:'center',gap:'4px'}}>{z}<button onClick={()=>removeZone(z)} style={{background:'none',border:'none',color:colors.accent,cursor:'pointer',fontWeight:'700',padding:0}}>✕</button></span>)}</div>}
+          </div>
+          <div style={{marginTop:'12px'}}><label style={ls}>Notas</label><textarea style={{...is,minHeight:'60px',resize:'vertical'}} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Notas sobre el cliente..." /></div>
+          <button onClick={handleSave} disabled={saving} style={{width:'100%',padding:'14px',marginTop:'20px',background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,color:colors.white,border:'none',borderRadius:'10px',fontSize:'15px',fontWeight:'600',cursor:saving?'not-allowed':'pointer'}}>{saving?'Guardando...':client?'Guardar cambios':'Crear cliente'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ToolsScreen() {
   const [activeTool, setActiveTool] = useState('evaluador')
   const is = { width:'100%', padding:'12px 16px', background:colors.inputBg, border:`1px solid ${colors.border}`, borderRadius:'10px', color:colors.text, fontSize:'16px', outline:'none', boxSizing:'border-box' }
@@ -568,6 +631,10 @@ export default function Home() {
   const [viewProperty, setViewProperty] = useState(null)
   const [propView, setPropView] = useState('all')
   const [showBulkUpload, setShowBulkUpload] = useState(false)
+  const [clients, setClients] = useState([])
+  const [showClientForm, setShowClientForm] = useState(false)
+  const [editClient, setEditClient] = useState(null)
+  const [clientFilters, setClientFilters] = useState({ status:'', operation:'', type:'' })
 
   useEffect(() => {
     supabase.auth.getSession().then(({data:{session}})=>{setSession(session);setLoading(false)})
@@ -580,12 +647,14 @@ export default function Home() {
 
   const loadData = useCallback(async () => {
     if(!session) return
-    const [{data:props},{data:profs}] = await Promise.all([
+    const [{data:props},{data:profs},{data:cls}] = await Promise.all([
       supabase.from('properties').select('*').order('created_at',{ascending:false}),
       supabase.from('profiles').select('id, full_name, phone, email, role, avatar_url'),
+      supabase.from('clients').select('*').order('created_at',{ascending:false}),
     ])
     if(props) setProperties(props)
     if(profs) setAgents(profs)
+    if(cls) setClients(cls)
   },[session])
 
   useEffect(()=>{loadData()},[loadData])
@@ -776,11 +845,78 @@ export default function Home() {
         {view==='tools' && <ToolsScreen />}
 
         {view==='clients' && (
-          <div style={{ textAlign:'center', padding:'80px 20px', color:colors.textSecondary, background:colors.card, borderRadius:'16px', border:`1px solid ${colors.border}` }}>
-            <div style={{ fontSize:'48px', marginBottom:'16px' }}>👥</div>
-            <h2 style={{ color:colors.text, fontSize:'20px', margin:'0 0 8px' }}>Módulo de Clientes</h2>
-            <p style={{ fontSize:'14px', margin:0 }}>Próximamente</p>
-          </div>
+          <>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px',flexWrap:'wrap',gap:'10px'}}>
+              <div>
+                <h1 style={{color:colors.text,fontSize:'20px',fontWeight:'700',margin:'0 0 4px'}}>Clientes</h1>
+                <p style={{color:colors.textSecondary,fontSize:'13px',margin:0}}>{clients.filter(c=>c.agent_id===session.user?.id).length} clientes registrados</p>
+              </div>
+              <div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
+                <button onClick={()=>{
+                  const myCls=clients.filter(c=>c.agent_id===session.user?.id)
+                  if(!myCls.length) return
+                  const h='nombre,telefono,email,presupuesto_min,presupuesto_max,transaccion,tipo,zonas,habitaciones_min,banos_min,estado,notas'
+                  const rows=myCls.map(c=>[c.full_name,c.phone,c.email,c.budget_min,c.budget_max,c.operation_type,c.property_type,c.preferred_zones?.join('|')||'',c.bedrooms_min,c.bathrooms_min,c.status,c.notes||''].map(v=>String(v).includes(',')?`"${v}"`:v).join(','))
+                  const csv=[h,...rows].join('\n')
+                  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})
+                  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='mis_clientes.csv';a.click();URL.revokeObjectURL(url)
+                }} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{Icons.download} Exportar</button>
+                <button onClick={()=>{setEditClient(null);setShowClientForm(true)}} style={{padding:'8px 12px',borderRadius:'10px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'600'}}>{Icons.plus} Nuevo cliente</button>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:'8px',marginBottom:'14px',flexWrap:'wrap'}}>
+              <select onChange={e=>setClientFilters(f=>({...f,status:e.target.value}))} value={clientFilters.status} style={{padding:'8px 12px',borderRadius:'8px',background:colors.card,border:`1px solid ${colors.border}`,color:colors.text,fontSize:'12px'}}><option value="">Todos los estados</option><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="cerrado">Cerrado</option></select>
+              <select onChange={e=>setClientFilters(f=>({...f,operation:e.target.value}))} value={clientFilters.operation} style={{padding:'8px 12px',borderRadius:'8px',background:colors.card,border:`1px solid ${colors.border}`,color:colors.text,fontSize:'12px'}}><option value="">Todas transacciones</option><option value="venta">Venta</option><option value="alquiler">Alquiler</option><option value="anticretico">Anticrético</option><option value="preventa">Preventa</option></select>
+              <select onChange={e=>setClientFilters(f=>({...f,type:e.target.value}))} value={clientFilters.type} style={{padding:'8px 12px',borderRadius:'8px',background:colors.card,border:`1px solid ${colors.border}`,color:colors.text,fontSize:'12px'}}><option value="">Todos los tipos</option><option value="casa">Casa</option><option value="departamento">Departamento</option><option value="terreno">Terreno</option></select>
+            </div>
+            {(()=>{
+              const myClients=clients.filter(c=>{
+                if(c.agent_id!==session.user?.id) return false
+                if(clientFilters.status&&c.status!==clientFilters.status) return false
+                if(clientFilters.operation&&c.operation_type!==clientFilters.operation) return false
+                if(clientFilters.type&&c.property_type!==clientFilters.type) return false
+                return true
+              })
+              if(myClients.length===0) return (
+                <div style={{textAlign:'center',padding:'50px 20px',color:colors.textSecondary,background:colors.card,borderRadius:'16px',border:`1px solid ${colors.border}`}}>
+                  <div style={{fontSize:'40px',marginBottom:'12px'}}>👥</div>
+                  <p style={{fontSize:'16px',margin:'0 0 4px',color:colors.text}}>No hay clientes</p>
+                  <p style={{fontSize:'14px',margin:0}}>Agrega tu primer cliente</p>
+                </div>
+              )
+              const statusColors={activo:{bg:colors.greenBg,color:colors.green},pausado:{bg:colors.yellowBg,color:colors.yellow},cerrado:{bg:colors.redBg,color:colors.red}}
+              return <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))',gap:'14px'}}>
+                {myClients.map(c=>{
+                  const st=statusColors[c.status]||statusColors.activo
+                  return <div key={c.id} style={{background:colors.card,borderRadius:'16px',border:`1px solid ${c.is_complete?colors.border:'rgba(251,191,36,0.4)'}`,padding:'16px',position:'relative'}}>
+                    {!c.is_complete&&<div style={{position:'absolute',top:'12px',right:'12px',background:colors.yellowBg,color:colors.yellow,padding:'2px 8px',borderRadius:'6px',fontSize:'10px',fontWeight:'600'}}>⚠ Incompleto</div>}
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'10px'}}>
+                      <div>
+                        <h3 style={{color:colors.text,fontSize:'15px',fontWeight:'600',margin:'0 0 4px'}}>{c.full_name}</h3>
+                        <div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
+                          <span style={{background:st.bg,color:st.color,padding:'2px 8px',borderRadius:'6px',fontSize:'11px',fontWeight:'600'}}>{c.status}</span>
+                          {c.operation_type&&<span style={{color:colors.textMuted,fontSize:'11px'}}>{opLabels[c.operation_type]}</span>}
+                          {c.property_type&&<span style={{color:colors.textMuted,fontSize:'11px'}}>· {typeLabels[c.property_type]}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    {(c.budget_min>0||c.budget_max>0)&&<p style={{color:colors.accent,fontSize:'14px',fontWeight:'700',margin:'0 0 8px'}}>$ {Number(c.budget_min||0).toLocaleString('en-US')} - $ {Number(c.budget_max||0).toLocaleString('en-US')}</p>}
+                    {c.preferred_zones?.length>0&&<div style={{display:'flex',gap:'4px',flexWrap:'wrap',marginBottom:'8px'}}>{c.preferred_zones.map(z=><span key={z} style={{padding:'2px 8px',background:colors.inputBg,color:colors.textSecondary,borderRadius:'6px',fontSize:'11px'}}>📍{z}</span>)}</div>}
+                    <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'10px'}}>
+                      {c.bedrooms_min>0&&<span style={{color:colors.textSecondary,fontSize:'12px'}}>{Icons.bed} {c.bedrooms_min}+ hab</span>}
+                      {c.bathrooms_min>0&&<span style={{color:colors.textSecondary,fontSize:'12px'}}>{Icons.bath} {c.bathrooms_min}+ baños</span>}
+                    </div>
+                    {c.phone&&<p style={{color:colors.textSecondary,fontSize:'12px',margin:'0 0 4px'}}>📞 {c.phone}</p>}
+                    {c.notes&&<p style={{color:colors.textMuted,fontSize:'11px',margin:'0 0 10px',fontStyle:'italic'}}>{c.notes}</p>}
+                    <div style={{display:'flex',gap:'6px'}}>
+                      <button onClick={()=>{setEditClient(c);setShowClientForm(true)}} style={{flex:1,padding:'8px',background:colors.accentLight,border:'1px solid rgba(108,99,255,0.3)',color:colors.accent,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'center',gap:'4px'}}>{Icons.edit} Editar</button>
+                      <button onClick={()=>{if(confirm('¿Eliminar este cliente?'))supabase.from('clients').delete().eq('id',c.id).then(()=>loadData())}} style={{padding:'8px 12px',background:colors.redBg,border:'1px solid rgba(248,113,113,0.3)',color:colors.red,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600'}}>🗑</button>
+                    </div>
+                  </div>
+                })}
+              </div>
+            })()}
+          </>
         )}
 
         {view==='profile' && <ProfileScreen session={session} currentUser={currentUser} onSaved={loadData} />}
@@ -789,6 +925,7 @@ export default function Home() {
       {showForm && <PropertyFormModal property={editProperty} session={session} onClose={()=>{setShowForm(false);setEditProperty(null)}} onSaved={()=>{setShowForm(false);setEditProperty(null);loadData()}} />}
       {viewProperty && <PropertyDetail property={viewProperty} agents={agents} onClose={()=>setViewProperty(null)} onBrochure={generateBrochure} />}
       {showBulkUpload && <BulkUploadModal session={session} onClose={()=>setShowBulkUpload(false)} onSaved={()=>{setShowBulkUpload(false);loadData()}} />}
+      {showClientForm && <ClientFormModal client={editClient} session={session} onClose={()=>{setShowClientForm(false);setEditClient(null)}} onSaved={()=>{setShowClientForm(false);setEditClient(null);loadData()}} />}
     </div>
   )
 }
