@@ -8,13 +8,14 @@ const supabase = createClient(
 )
 
 const colors = {
-  bg: "#0F1117", card: "#1A1D27", cardHover: "#222636",
-  accent: "#6C63FF", accentHover: "#5A52E0", accentLight: "rgba(108,99,255,0.12)",
+  bg: "#0D0F14", card: "#161923", cardHover: "#1E2230",
+  accent: "#E8943A", accentHover: "#D4832F", accentLight: "rgba(232,148,58,0.12)",
   green: "#34D399", greenBg: "rgba(52,211,153,0.12)",
   yellow: "#FBBF24", yellowBg: "rgba(251,191,36,0.12)",
   red: "#F87171", redBg: "rgba(248,113,113,0.12)",
-  text: "#F1F1F4", textSecondary: "#9CA3AF", textMuted: "#6B7280",
-  border: "#2A2D3A", inputBg: "#151722", white: "#FFFFFF",
+  text: "#F5F1EB", textSecondary: "#A8A29E", textMuted: "#78716C",
+  border: "#2A2520", inputBg: "#131620", white: "#FFFFFF",
+  gold: "#D4A853", goldBg: "rgba(212,168,83,0.12)",
 }
 
 const COMMON_AREAS = ['Piscina','Parrillero/BBQ','Sala de reuniones','Gimnasio','Jardín','Salón de eventos','Área de juegos infantiles','Cancha deportiva','Lavandería común','Estacionamiento de visitas']
@@ -71,10 +72,10 @@ function LoginScreen({ onLogin }) {
   }
   const inputStyle = { width:'100%', padding:'12px 16px', background:colors.inputBg, border:`1px solid ${colors.border}`, borderRadius:'10px', color:colors.text, fontSize:'14px', outline:'none', boxSizing:'border-box' }
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:`linear-gradient(135deg, ${colors.bg} 0%, #1a1040 50%, ${colors.bg} 100%)`, padding:'20px' }}>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:`linear-gradient(135deg, ${colors.bg} 0%, #1a1005 50%, ${colors.bg} 100%)`, padding:'20px' }}>
       <div style={{ width:'100%', maxWidth:'420px', background:colors.card, borderRadius:'20px', padding:'40px 32px', border:`1px solid ${colors.border}`, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
         <div style={{ textAlign:'center', marginBottom:'32px' }}>
-          <div style={{ width:'56px', height:'56px', borderRadius:'16px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', fontSize:'24px', fontWeight:'bold', color:colors.white }}>O</div>
+          <div style={{ width:'56px', height:'56px', borderRadius:'16px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', fontSize:'24px', fontWeight:'bold', color:colors.white }}>O</div>
           <h1 style={{ color:colors.text, fontSize:'24px', fontWeight:'700', margin:'0 0 4px' }}>OmniaTools</h1>
           <p style={{ color:colors.textSecondary, fontSize:'14px', margin:0 }}>{isSignUp ? 'Crea tu cuenta de vendedor' : 'Ingresa a tu cuenta'}</p>
         </div>
@@ -86,7 +87,7 @@ function LoginScreen({ onLogin }) {
           </>)}
           <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Correo electrónico</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" style={inputStyle} /></div>
           <div style={{ marginBottom:'24px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Contraseña</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" style={inputStyle} /></div>
-          <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px', background:loading?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:loading?'not-allowed':'pointer', boxSizing:'border-box' }}>{loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}</button>
+          <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px', background:loading?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:loading?'not-allowed':'pointer', boxSizing:'border-box' }}>{loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}</button>
         </form>
         <div style={{ textAlign:'center', marginTop:'20px' }}><button onClick={() => { setIsSignUp(!isSignUp); setError('') }} style={{ background:'none', border:'none', color:colors.accent, fontSize:'14px', cursor:'pointer', textDecoration:'underline' }}>{isSignUp ? 'Ya tengo cuenta → Iniciar sesión' : 'No tengo cuenta → Registrarme'}</button></div>
         {!isSignUp && <div style={{ textAlign:'center', marginTop:'12px' }}><button onClick={async () => { if(!email){setError('Escribe tu correo primero');return}; setError(''); const{error:err}=await supabase.auth.resetPasswordForEmail(email); if(err){setError(err.message)}else{setError('Te enviamos un correo para recuperar tu contraseña. Revisa tu bandeja.')} }} style={{ background:'none', border:'none', color:colors.textMuted, fontSize:'13px', cursor:'pointer' }}>¿Olvidaste tu contraseña?</button></div>}
@@ -104,7 +105,7 @@ function PropertyCard({ property, agents, currentUserId, onView, onEdit, onDelet
   const priceBs = property.exchange_rate ? `Bs ${Math.round(Number(property.price)*Number(property.exchange_rate)).toLocaleString('es-BO')}` : ''
   return (
     <div onClick={() => onView(property)} style={{ background:colors.card, borderRadius:'16px', overflow:'hidden', border:`1px solid ${colors.border}`, cursor:'pointer' }}>
-      <div style={{ height:'160px', background:photo?`url(${photo}) center/cover`:'linear-gradient(135deg, #2a2040, #1a1530)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+      <div style={{ height:'160px', background:photo?`url(${photo}) center/cover`:'linear-gradient(135deg, #1a1510, #0d0a05)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
         {!photo && <span style={{ fontSize:'40px' }}>🏠</span>}
         <div style={{ position:'absolute', top:'10px', left:'10px', display:'flex', gap:'4px', flexWrap:'wrap' }}>
           <span style={{ background:'rgba(0,0,0,0.7)', color:colors.white, padding:'4px 8px', borderRadius:'6px', fontSize:'11px', fontWeight:'600' }}>{opLabels[property.operation_type]}</span>
@@ -130,7 +131,7 @@ function PropertyCard({ property, agents, currentUserId, onView, onEdit, onDelet
         </div>
         <div style={{ display:'flex', gap:'4px', marginBottom:'10px' }}>
           <button onClick={e=>{e.stopPropagation();const msg=`🏠 *${property.title}*%0A💰 $${Number(property.price).toLocaleString('en-US')} | ${opLabels[property.operation_type]}%0A📍 ${property.zone}${property.address?' · '+property.address:''}%0A${property.bedrooms>0?'🛏 '+property.bedrooms+' hab · ':''}${property.bathrooms>0?'🚿 '+property.bathrooms+' baños · ':''}${property.area_m2?'📐 '+property.area_m2+'m²':''}%0A%0A📞 ${agent?.full_name||''} - ${agent?.phone||''}`;window.open('https://wa.me/?text='+msg,'_blank')}} style={{ flex:1, background:'#25D366', border:'none', color:colors.white, padding:'6px 8px', borderRadius:'6px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', fontSize:'11px', fontWeight:'600' }}>📤 Compartir</button>
-          <button onClick={e=>{e.stopPropagation();const txt=`🏠 ${property.title}\n💰 $${Number(property.price).toLocaleString('en-US')} USD | ${opLabels[property.operation_type]}\n📍 ${property.zone}${property.address?' · '+property.address:''}\n${property.bedrooms>0?'🛏 '+property.bedrooms+' habitaciones\n':''}${property.bathrooms>0?'🚿 '+property.bathrooms+' baños\n':''}${property.area_m2?'📐 '+property.area_m2+' m²\n':''}${property.parking_spots>0?'🚗 '+property.parking_spots+' estac.\n':''}${property.common_areas?.length>0?'\n✨ Áreas: '+property.common_areas.join(', ')+'\n':''}${property.description?'\n'+property.description+'\n':''}\n📞 ${agent?.full_name||''} - ${agent?.phone||''}\n\n#Inmobiliaria #BienesRaíces #Cochabamba`;navigator.clipboard.writeText(txt).then(()=>alert('¡Copiado para redes sociales!'))}} style={{ flex:1, background:colors.accentLight, border:`1px solid rgba(108,99,255,0.3)`, color:colors.accent, padding:'6px 8px', borderRadius:'6px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', fontSize:'11px', fontWeight:'600' }}>{Icons.copy} Redes</button>
+          <button onClick={e=>{e.stopPropagation();const txt=`🏠 ${property.title}\n💰 $${Number(property.price).toLocaleString('en-US')} USD | ${opLabels[property.operation_type]}\n📍 ${property.zone}${property.address?' · '+property.address:''}\n${property.bedrooms>0?'🛏 '+property.bedrooms+' habitaciones\n':''}${property.bathrooms>0?'🚿 '+property.bathrooms+' baños\n':''}${property.area_m2?'📐 '+property.area_m2+' m²\n':''}${property.parking_spots>0?'🚗 '+property.parking_spots+' estac.\n':''}${property.common_areas?.length>0?'\n✨ Áreas: '+property.common_areas.join(', ')+'\n':''}${property.description?'\n'+property.description+'\n':''}\n📞 ${agent?.full_name||''} - ${agent?.phone||''}\n\n#Inmobiliaria #BienesRaíces #Cochabamba`;navigator.clipboard.writeText(txt).then(()=>alert('¡Copiado para redes sociales!'))}} style={{ flex:1, background:colors.accentLight, border:`1px solid rgba(232,148,58,0.3)`, color:colors.accent, padding:'6px 8px', borderRadius:'6px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', fontSize:'11px', fontWeight:'600' }}>{Icons.copy} Redes</button>
         </div>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 10px', background:colors.inputBg, borderRadius:'8px' }}>
           <div><span style={{ color:colors.textMuted, fontSize:'10px' }}>Agente</span><p style={{ color:colors.text, fontSize:'12px', fontWeight:'500', margin:0 }}>{agent?.full_name||'Sin asignar'} {isOwner && <span style={{ color:colors.accent, fontSize:'10px' }}>(tú)</span>}</p></div>
@@ -249,7 +250,7 @@ function PropertyFormModal({ property, session, onClose, onSaved }) {
             </div>
           </div>
           <div style={{ marginTop:'16px' }}><label style={ls}>Descripción</label><textarea style={{ ...is, minHeight:'80px', resize:'vertical' }} value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Describe la propiedad..." /></div>
-          <button onClick={handleSave} disabled={saving} style={{ width:'100%', padding:'14px', marginTop:'20px', background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:saving?'not-allowed':'pointer' }}>{saving?'Guardando...':property?'Guardar cambios':'Crear propiedad'}</button>
+          <button onClick={handleSave} disabled={saving} style={{ width:'100%', padding:'14px', marginTop:'20px', background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:saving?'not-allowed':'pointer' }}>{saving?'Guardando...':property?'Guardar cambios':'Crear propiedad'}</button>
         </div>
       </div>
     </div>
@@ -282,14 +283,14 @@ function PropertyDetail({ property, agents, onClose, onBrochure }) {
           </div>
           {property.common_areas?.length > 0 && <div style={{ marginBottom:'20px' }}><h4 style={{ color:colors.textSecondary, fontSize:'12px', fontWeight:'600', textTransform:'uppercase', marginBottom:'8px' }}>Áreas comunes</h4><div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>{property.common_areas.map(a=><span key={a} style={{ padding:'4px 10px', background:colors.greenBg, color:colors.green, borderRadius:'6px', fontSize:'12px', fontWeight:'500' }}>✓ {a}</span>)}</div></div>}
           {property.description && <div style={{ marginBottom:'20px' }}><h4 style={{ color:colors.textSecondary, fontSize:'12px', fontWeight:'600', textTransform:'uppercase', marginBottom:'8px' }}>Descripción</h4><p style={{ color:colors.text, fontSize:'14px', lineHeight:'1.6', margin:0 }}>{property.description}</p></div>}
-          <div style={{ padding:'16px', background:colors.accentLight, borderRadius:'12px', border:'1px solid rgba(108,99,255,0.2)', marginBottom:'20px' }}>
+          <div style={{ padding:'16px', background:colors.accentLight, borderRadius:'12px', border:'1px solid rgba(232,148,58,0.2)', marginBottom:'20px' }}>
             <span style={{ color:colors.textMuted, fontSize:'12px' }}>Agente</span>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'6px' }}>
               <p style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:0 }}>{agent?.full_name||'Sin asignar'}</p>
               {agent?.phone && <a href={`https://wa.me/591${agent.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" style={{ display:'flex', alignItems:'center', gap:'6px', padding:'8px 16px', background:'#25D366', color:colors.white, borderRadius:'8px', textDecoration:'none', fontSize:'13px', fontWeight:'600' }}>{Icons.phone} WhatsApp</a>}
             </div>
           </div>
-          <button onClick={()=>onBrochure(property)} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>{Icons.file} Generar Brochure</button>
+          <button onClick={()=>onBrochure(property)} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>{Icons.file} Generar Brochure</button>
         </div>
       </div>
     </div>
@@ -363,7 +364,7 @@ function BulkUploadModal({ session, onClose, onSaved }) {
         <div style={{ padding:'20px 24px' }}>
           {error && <div style={{ background:colors.redBg, color:colors.red, padding:'10px 14px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>{error}</div>}
           {success && <div style={{ background:colors.greenBg, color:colors.green, padding:'10px 14px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>{success}</div>}
-          <div style={{ marginBottom:'20px', padding:'16px', background:'rgba(108,99,255,0.08)', borderRadius:'12px', border:'1px solid rgba(108,99,255,0.2)' }}>
+          <div style={{ marginBottom:'20px', padding:'16px', background:'rgba(232,148,58,0.08)', borderRadius:'12px', border:'1px solid rgba(232,148,58,0.2)' }}>
             <p style={{ color:colors.accent, fontSize:'14px', fontWeight:'700', margin:'0 0 10px' }}>📋 Guía rápida para llenar tu archivo</p>
             <div style={{ color:colors.textSecondary, fontSize:'12px', lineHeight:'1.8' }}>
               <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>transaccion:</span> escribe <span style={{ color:colors.green }}>venta</span>, <span style={{ color:colors.green }}>alquiler</span>, <span style={{ color:colors.green }}>anticretico</span> o <span style={{ color:colors.green }}>preventa</span></p>
@@ -381,7 +382,7 @@ function BulkUploadModal({ session, onClose, onSaved }) {
           </div>
           <div style={{ marginBottom:'20px', padding:'16px', background:colors.inputBg, borderRadius:'12px', border:`1px solid ${colors.border}` }}>
             <p style={{ color:colors.text, fontSize:'14px', fontWeight:'600', margin:'0 0 12px' }}>Paso 2: Sube tu archivo</p>
-            <button onClick={()=>fileRef.current?.click()} style={{ padding:'10px 16px', borderRadius:'8px', border:'none', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', fontSize:'13px', fontWeight:'600' }}>{Icons.upload} {file?file.name:'Seleccionar archivo'}</button>
+            <button onClick={()=>fileRef.current?.click()} style={{ padding:'10px 16px', borderRadius:'8px', border:'none', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', fontSize:'13px', fontWeight:'600' }}>{Icons.upload} {file?file.name:'Seleccionar archivo'}</button>
             <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={handleFile} />
           </div>
           {preview.length>0 && <div>
@@ -456,7 +457,7 @@ function ClientFormModal({ client, session, onClose, onSaved }) {
             {form.preferred_zones.length>0&&<div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>{form.preferred_zones.map(z=><span key={z} style={{padding:'4px 10px',background:colors.accentLight,color:colors.accent,borderRadius:'6px',fontSize:'12px',display:'flex',alignItems:'center',gap:'4px'}}>{z}<button onClick={()=>removeZone(z)} style={{background:'none',border:'none',color:colors.accent,cursor:'pointer',fontWeight:'700',padding:0}}>✕</button></span>)}</div>}
           </div>
           <div style={{marginTop:'12px'}}><label style={ls}>Notas</label><textarea style={{...is,minHeight:'60px',resize:'vertical'}} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Notas sobre el cliente..." /></div>
-          <button onClick={handleSave} disabled={saving} style={{width:'100%',padding:'14px',marginTop:'20px',background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,color:colors.white,border:'none',borderRadius:'10px',fontSize:'15px',fontWeight:'600',cursor:saving?'not-allowed':'pointer'}}>{saving?'Guardando...':client?'Guardar cambios':'Crear cliente'}</button>
+          <button onClick={handleSave} disabled={saving} style={{width:'100%',padding:'14px',marginTop:'20px',background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`,color:colors.white,border:'none',borderRadius:'10px',fontSize:'15px',fontWeight:'600',cursor:saving?'not-allowed':'pointer'}}>{saving?'Guardando...':client?'Guardar cambios':'Crear cliente'}</button>
         </div>
       </div>
     </div>
@@ -497,7 +498,7 @@ function ToolsScreen() {
         <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>¿Tu cliente puede adquirir la propiedad? Necesita al menos el 20% del valor total.</p>
         <div style={{ marginBottom:'16px' }}><label style={ls}>Valor de la propiedad (USD)</label><input type="number" style={is} value={pv} onChange={e=>{setPv(e.target.value);setEvResult(null)}} placeholder="Ej: 150000" /></div>
         <div style={{ marginBottom:'20px' }}><label style={ls}>Capital disponible del cliente (USD)</label><input type="number" style={is} value={cb} onChange={e=>{setCb(e.target.value);setEvResult(null)}} placeholder="Ej: 30000" /></div>
-        <button onClick={evaluate} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Evaluar</button>
+        <button onClick={evaluate} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Evaluar</button>
         {evResult && <div style={{ marginTop:'20px', padding:'20px', borderRadius:'12px', background:evResult.isApt?colors.greenBg:colors.redBg, border:`1px solid ${evResult.isApt?'rgba(52,211,153,0.3)':'rgba(248,113,113,0.3)'}` }}>
           <div style={{ textAlign:'center', marginBottom:'12px' }}><span style={{ fontSize:'40px' }}>{evResult.isApt?'✅':'❌'}</span><h3 style={{ color:evResult.isApt?colors.green:colors.red, fontSize:'18px', fontWeight:'700', margin:'8px 0 0' }}>{evResult.isApt?'CLIENTE APTO':'CLIENTE NO APTO'}</h3></div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'12px' }}>
@@ -517,7 +518,7 @@ function ToolsScreen() {
           <div><label style={ls}>Tasa anual (%)</label><input type="number" step="0.1" style={is} value={lnRate} onChange={e=>{setLnRate(e.target.value);setLnResult(null)}} placeholder="7.5" /></div>
           <div><label style={ls}>Plazo (años)</label><input type="number" style={is} value={lnYears} onChange={e=>{setLnYears(e.target.value);setLnResult(null)}} placeholder="20" /></div>
         </div>
-        <button onClick={calcLoan} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Calcular</button>
+        <button onClick={calcLoan} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Calcular</button>
         {lnResult && <div style={{ marginTop:'20px', padding:'20px', borderRadius:'12px', background:colors.greenBg, border:'1px solid rgba(52,211,153,0.3)' }}>
           <div style={{ textAlign:'center', marginBottom:'16px' }}><p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>Cuota mensual estimada</p><p style={{ color:colors.green, fontSize:'28px', fontWeight:'700', margin:0 }}>$ {lnResult.monthly.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</p></div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
@@ -532,7 +533,7 @@ function ToolsScreen() {
         <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>Calcula tu comisión por la venta.</p>
         <div style={{ marginBottom:'12px' }}><label style={ls}>Precio de venta (USD)</label><input type="number" style={is} value={comPrice} onChange={e=>{setComPrice(e.target.value);setComResult(null)}} placeholder="150000" /></div>
         <div style={{ marginBottom:'20px' }}><label style={ls}>Porcentaje de comisión (%)</label><input type="number" step="0.5" style={is} value={comPct} onChange={e=>{setComPct(e.target.value);setComResult(null)}} placeholder="3" /></div>
-        <button onClick={calcCom} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Calcular</button>
+        <button onClick={calcCom} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Calcular</button>
         {comResult && <div style={{ marginTop:'20px', padding:'20px', borderRadius:'12px', background:colors.greenBg, border:'1px solid rgba(52,211,153,0.3)', textAlign:'center' }}>
           <p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>Tu comisión ({comResult.pct}%)</p>
           <p style={{ color:colors.green, fontSize:'28px', fontWeight:'700', margin:0 }}>$ {comResult.amount.toLocaleString('en-US')}</p>
@@ -548,7 +549,7 @@ function ToolsScreen() {
         </div>
         <div style={{ marginBottom:'12px' }}><label style={ls}>{convDir==='usd2bs'?'Monto en USD':'Monto en Bs'}</label><input type="number" style={is} value={convUsd} onChange={e=>setConvUsd(e.target.value)} placeholder={convDir==='usd2bs'?'Ej: 1000':'Ej: 6960'} /></div>
         <div style={{ marginBottom:'16px' }}><label style={ls}>Tipo de cambio</label><input type="number" step="0.01" style={is} value={convTc} onChange={e=>setConvTc(e.target.value)} /></div>
-        {convResult!==null && <div style={{ padding:'20px', borderRadius:'12px', background:colors.accentLight, border:'1px solid rgba(108,99,255,0.3)', textAlign:'center' }}>
+        {convResult!==null && <div style={{ padding:'20px', borderRadius:'12px', background:colors.accentLight, border:'1px solid rgba(232,148,58,0.3)', textAlign:'center' }}>
           <p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>{convDir==='usd2bs'?'Equivalente en Bs':'Equivalente en USD'}</p>
           <p style={{ color:colors.accent, fontSize:'28px', fontWeight:'700', margin:0 }}>{convDir==='usd2bs'?'Bs':'$'} {convResult.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</p>
         </div>}
@@ -559,7 +560,7 @@ function ToolsScreen() {
         <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'0 0 20px' }}>Compara el valor real entre propiedades.</p>
         <div style={{ marginBottom:'12px' }}><label style={ls}>Precio de la propiedad (USD)</label><input type="number" style={is} value={m2Price} onChange={e=>setM2Price(e.target.value)} placeholder="150000" /></div>
         <div style={{ marginBottom:'16px' }}><label style={ls}>Superficie (m²)</label><input type="number" style={is} value={m2Area} onChange={e=>setM2Area(e.target.value)} placeholder="120" /></div>
-        {m2Result!==null && <div style={{ padding:'20px', borderRadius:'12px', background:colors.accentLight, border:'1px solid rgba(108,99,255,0.3)', textAlign:'center' }}>
+        {m2Result!==null && <div style={{ padding:'20px', borderRadius:'12px', background:colors.accentLight, border:'1px solid rgba(232,148,58,0.3)', textAlign:'center' }}>
           <p style={{ color:colors.textMuted, fontSize:'12px', margin:'0 0 4px' }}>Precio por metro cuadrado</p>
           <p style={{ color:colors.accent, fontSize:'28px', fontWeight:'700', margin:0 }}>$ {m2Result.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')} /m²</p>
         </div>}
@@ -599,7 +600,7 @@ function ProfileScreen({ session, currentUser, onSaved }) {
         {error && <div style={{ background:colors.redBg, color:colors.red, padding:'10px 14px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>{error}</div>}
         {success && <div style={{ background:colors.greenBg, color:colors.green, padding:'10px 14px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>{success}</div>}
         <div style={{ textAlign:'center', marginBottom:'24px' }}>
-          <div onClick={()=>fileRef.current?.click()} style={{ width:'100px', height:'100px', borderRadius:'50%', margin:'0 auto 12px', cursor:'pointer', background:avatarUrl?`url(${avatarUrl}) center/cover`:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, display:'flex', alignItems:'center', justifyContent:'center', border:`3px solid ${colors.border}`, position:'relative' }}>
+          <div onClick={()=>fileRef.current?.click()} style={{ width:'100px', height:'100px', borderRadius:'50%', margin:'0 auto 12px', cursor:'pointer', background:avatarUrl?`url(${avatarUrl}) center/cover`:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, display:'flex', alignItems:'center', justifyContent:'center', border:`3px solid ${colors.border}`, position:'relative' }}>
             {!avatarUrl && <span style={{ color:colors.white, fontSize:'36px', fontWeight:'700' }}>{form.full_name?form.full_name[0].toUpperCase():'?'}</span>}
             <div style={{ position:'absolute', bottom:0, right:0, width:'28px', height:'28px', background:colors.accent, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:`2px solid ${colors.card}` }}>{Icons.camera}</div>
           </div>
@@ -610,7 +611,7 @@ function ProfileScreen({ session, currentUser, onSaved }) {
           <div><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Nombre completo *</label><input style={is} value={form.full_name} onChange={e=>setForm(f=>({...f,full_name:e.target.value}))} /></div>
           <div><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Teléfono</label><input type="tel" style={is} value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} /></div>
           <div><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Correo</label><input type="email" style={is} value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} /></div>
-          <button onClick={handleSave} disabled={saving} style={{ width:'100%', padding:'14px', marginTop:'8px', background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:saving?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>{Icons.save} {saving?'Guardando...':'Guardar cambios'}</button>
+          <button onClick={handleSave} disabled={saving} style={{ width:'100%', padding:'14px', marginTop:'8px', background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:saving?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>{Icons.save} {saving?'Guardando...':'Guardar cambios'}</button>
         </div>
       </div>
     </div>
@@ -683,18 +684,18 @@ export default function Home() {
     const priceBs = property.exchange_rate ? `Bs ${Math.round(Number(property.price)*Number(property.exchange_rate)).toLocaleString('es-BO')}` : ''
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${property.title}</title>
     <style>@media print{body{margin:0}.no-print{display:none}}body{font-family:'Segoe UI',sans-serif;max-width:800px;margin:0 auto;padding:24px;color:#222}
-    .header{background:linear-gradient(135deg,#1B4F72,#6C63FF);color:white;padding:32px;border-radius:16px;margin-bottom:24px}
+    .header{background:linear-gradient(135deg,#1a1510,#E8943A);color:white;padding:32px;border-radius:16px;margin-bottom:24px}
     .badge{display:inline-block;background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;margin-bottom:12px}
     .title{font-size:28px;font-weight:700;margin:8px 0}.price{font-size:32px;font-weight:700}.price-bs{font-size:16px;opacity:0.8;margin-top:4px}
     .features{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0}
     .feature{text-align:center;padding:16px;background:#f8f9fa;border-radius:12px}
-    .feature-value{font-size:24px;font-weight:700;color:#1B4F72}.feature-label{font-size:12px;color:#666;margin-top:4px}
+    .feature-value{font-size:24px;font-weight:700;color:#1a1510}.feature-label{font-size:12px;color:#666;margin-top:4px}
     .areas{margin:24px 0;padding:20px;background:#f8f9fa;border-radius:12px}.areas-title{font-weight:600;margin-bottom:10px}
     .areas-grid{display:flex;flex-wrap:wrap;gap:8px}.area-tag{padding:4px 12px;background:#e8f5e9;color:#2e7d32;border-radius:6px;font-size:13px}
     .description{line-height:1.7;color:#444;margin:24px 0;padding:20px;background:#f8f9fa;border-radius:12px}
     .photos{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:24px 0}.photos img{width:100%;height:200px;object-fit:cover;border-radius:12px}
-    .agent{padding:20px;background:#1B4F72;color:white;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
-    .btn{display:block;width:100%;padding:14px;background:#6C63FF;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;box-sizing:border-box}</style></head>
+    .agent{padding:20px;background:#1a1510;color:white;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
+    .btn{display:block;width:100%;padding:14px;background:#E8943A;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;box-sizing:border-box}</style></head>
     <body><div class="header"><span class="badge">${opLabels[property.operation_type]} · ${typeLabels[property.property_type]}</span>
     <div class="title">${property.title}</div><div class="price">$ ${Number(property.price).toLocaleString('en-US')} USD</div>
     <div style="opacity:0.9;font-size:15px;margin-top:8px">📍 ${property.zone}${property.address?` · ${property.address}`:''} · Cochabamba</div></div>
@@ -731,7 +732,7 @@ export default function Home() {
       }
       const is={width:'100%',padding:'12px 16px',background:colors.inputBg,border:`1px solid ${colors.border}`,borderRadius:'10px',color:colors.text,fontSize:'14px',outline:'none',boxSizing:'border-box'}
       return (
-        <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:`linear-gradient(135deg, ${colors.bg} 0%, #1a1040 50%, ${colors.bg} 100%)`, padding:'20px' }}>
+        <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:`linear-gradient(135deg, ${colors.bg} 0%, #1a1005 50%, ${colors.bg} 100%)`, padding:'20px' }}>
           <div style={{ width:'100%', maxWidth:'420px', background:colors.card, borderRadius:'20px', padding:'40px 32px', border:`1px solid ${colors.border}` }}>
             <div style={{ textAlign:'center', marginBottom:'24px' }}>
               <div style={{ fontSize:'40px', marginBottom:'12px' }}>🔐</div>
@@ -742,7 +743,7 @@ export default function Home() {
             {ok && <div style={{ background:colors.greenBg, color:colors.green, padding:'12px 16px', borderRadius:'10px', fontSize:'13px', marginBottom:'16px' }}>Contraseña actualizada. Redirigiendo...</div>}
             <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Nueva contraseña</label><input type="password" style={is} value={newPass} onChange={e=>setNewPass(e.target.value)} placeholder="Mínimo 6 caracteres" /></div>
             <div style={{ marginBottom:'24px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Confirmar contraseña</label><input type="password" style={is} value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="Repite tu contraseña" /></div>
-            <button onClick={handleReset} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Cambiar contraseña</button>
+            <button onClick={handleReset} style={{ width:'100%', padding:'14px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>Cambiar contraseña</button>
           </div>
         </div>
       )
@@ -755,7 +756,7 @@ export default function Home() {
     <div style={{ minHeight:'100vh', background:colors.bg, fontFamily:"'Segoe UI', system-ui, sans-serif" }}>
       <nav style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 16px', background:colors.card, borderBottom:`1px solid ${colors.border}`, position:'sticky', top:0, zIndex:100, flexWrap:'wrap', gap:'6px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-          <div style={{ width:'32px', height:'32px', borderRadius:'8px', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px', fontWeight:'bold', color:colors.white }}>O</div>
+          <div style={{ width:'32px', height:'32px', borderRadius:'8px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px', fontWeight:'bold', color:colors.white }}>O</div>
           <span style={{ color:colors.text, fontSize:'15px', fontWeight:'700' }}>OmniaTools</span>
         </div>
         <div style={{ display:'flex', gap:'2px' }}>
@@ -770,6 +771,15 @@ export default function Home() {
       </nav>
 
       <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'16px' }}>
+        {/* Saludo personalizado */}
+        <div style={{ marginBottom:'16px', padding:'16px 20px', background:`linear-gradient(135deg, rgba(232,148,58,0.08), rgba(212,168,83,0.05))`, borderRadius:'14px', border:'1px solid rgba(232,148,58,0.15)' }}>
+          <p style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:0 }}>
+            {new Date().getHours()<12?'☀️ Buenos días':'🌙 Buenas tardes'}{currentUser?.full_name?', '+currentUser.full_name.split(' ')[0]:''} 👋
+          </p>
+          <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'4px 0 0' }}>
+            {properties.filter(p=>p.agent_id===session.user?.id).length} propiedades · {clients.filter(c=>c.agent_id===session.user?.id).length} clientes
+          </p>
+        </div>
         {view==='properties' && (<>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px', flexWrap:'wrap', gap:'10px' }}>
             <div>
@@ -779,7 +789,7 @@ export default function Home() {
             <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
               <button onClick={()=>setShowFilters(!showFilters)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:showFilters?colors.accentLight:colors.card, color:showFilters?colors.accent:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{Icons.filter} Filtros</button>
               <button onClick={()=>setShowBulkUpload(true)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:colors.card, color:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{Icons.upload} Carga rápida</button>
-              <button onClick={()=>{setEditProperty(null);setShowForm(true)}} style={{ padding:'8px 12px', borderRadius:'10px', border:'none', background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`, color:colors.white, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'600' }}>{Icons.plus} Nueva</button>
+              <button onClick={()=>{setEditProperty(null);setShowForm(true)}} style={{ padding:'8px 12px', borderRadius:'10px', border:'none', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'600' }}>{Icons.plus} Nueva</button>
             </div>
           </div>
           <div style={{ display:'flex', gap:'10px', alignItems:'center', marginBottom:'14px', flexWrap:'wrap' }}>
@@ -806,16 +816,16 @@ export default function Home() {
               <button onClick={()=>{
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Resumen de Propiedades</title>
                 <style>body{font-family:'Segoe UI',sans-serif;max-width:900px;margin:0 auto;padding:24px;color:#222}
-                .header{background:linear-gradient(135deg,#1B4F72,#6C63FF);color:white;padding:24px;border-radius:16px;margin-bottom:24px}
+                .header{background:linear-gradient(135deg,#1a1510,#E8943A);color:white;padding:24px;border-radius:16px;margin-bottom:24px}
                 .header h1{margin:0;font-size:24px}.header p{margin:8px 0 0;opacity:0.9;font-size:14px}
                 .grid{display:grid;gap:16px}.card{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;page-break-inside:avoid}
                 .card-header{padding:16px;background:#f8f9fa}.card-title{font-size:16px;font-weight:700;margin:0 0 4px}
-                .card-price{font-size:20px;font-weight:700;color:#6C63FF;margin:0}.card-loc{font-size:13px;color:#666;margin:4px 0 0}
+                .card-price{font-size:20px;font-weight:700;color:#E8943A;margin:0}.card-loc{font-size:13px;color:#666;margin:4px 0 0}
                 .card-body{padding:12px 16px;display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#555}
                 .card-feat{background:#f1f5f9;padding:4px 10px;border-radius:6px}
                 .card-areas{padding:8px 16px 16px;font-size:12px;color:#666}
                 .card-agent{padding:10px 16px;background:#f1f5f9;font-size:13px;border-top:1px solid #e2e8f0}
-                .btn{display:block;width:100%;padding:14px;background:#6C63FF;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:24px;box-sizing:border-box}
+                .btn{display:block;width:100%;padding:14px;background:#E8943A;color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:24px;box-sizing:border-box}
                 @media print{.no-print{display:none}}</style></head><body>
                 <div class="header"><h1>Resumen de Propiedades</h1><p>${filteredProperties.length} propiedades encontradas · ${new Date().toLocaleDateString('es-BO')}</p></div>
                 <div class="grid">${filteredProperties.map(p=>{
@@ -864,7 +874,7 @@ export default function Home() {
                   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='mis_clientes.csv';a.click();URL.revokeObjectURL(url)
                 }} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{Icons.download} Exportar</button>
                 <button onClick={()=>setShowVcfImport(true)} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{Icons.upload} Importar contactos</button>
-                <button onClick={()=>{setEditClient(null);setShowClientForm(true)}} style={{padding:'8px 12px',borderRadius:'10px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'600'}}>{Icons.plus} Nuevo cliente</button>
+                <button onClick={()=>{setEditClient(null);setShowClientForm(true)}} style={{padding:'8px 12px',borderRadius:'10px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'600'}}>{Icons.plus} Nuevo cliente</button>
               </div>
             </div>
             <div style={{display:'flex',gap:'8px',marginBottom:'14px',flexWrap:'wrap'}}>
@@ -913,7 +923,7 @@ export default function Home() {
                     {c.notes&&<p style={{color:colors.textMuted,fontSize:'11px',margin:'0 0 10px',fontStyle:'italic'}}>{c.notes}</p>}
                     <div style={{display:'flex',gap:'6px'}}>
                       <button onClick={()=>setMatchClient(c)} style={{flex:1,padding:'8px',background:colors.greenBg,border:'1px solid rgba(52,211,153,0.3)',color:colors.green,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'center',gap:'4px'}}>🔍 Match</button>
-                      <button onClick={()=>{setEditClient(c);setShowClientForm(true)}} style={{flex:1,padding:'8px',background:colors.accentLight,border:'1px solid rgba(108,99,255,0.3)',color:colors.accent,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'center',gap:'4px'}}>{Icons.edit} Editar</button>
+                      <button onClick={()=>{setEditClient(c);setShowClientForm(true)}} style={{flex:1,padding:'8px',background:colors.accentLight,border:'1px solid rgba(232,148,58,0.3)',color:colors.accent,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'center',gap:'4px'}}>{Icons.edit} Editar</button>
                       <button onClick={()=>{if(confirm('¿Eliminar este cliente?'))supabase.from('clients').delete().eq('id',c.id).then(()=>loadData())}} style={{padding:'8px 12px',background:colors.redBg,border:'1px solid rgba(248,113,113,0.3)',color:colors.red,borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:'600'}}>🗑</button>
                     </div>
                   </div>
@@ -959,7 +969,7 @@ export default function Home() {
               :<div style={{display:'flex',flexDirection:'column',gap:'12px'}}>{matched.map(p=>{
                 const ag=agents.find(a=>a.id===p.agent_id)
                 return <div key={p.id} style={{display:'flex',gap:'14px',padding:'14px',background:colors.inputBg,borderRadius:'12px',border:`1px solid ${colors.border}`,alignItems:'center',flexWrap:'wrap'}}>
-                  <div style={{width:'80px',height:'80px',borderRadius:'10px',background:p.photos?.length?`url(${p.photos[0]}) center/cover`:'linear-gradient(135deg,#2a2040,#1a1530)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>{!p.photos?.length&&<span style={{fontSize:'24px'}}>🏠</span>}</div>
+                  <div style={{width:'80px',height:'80px',borderRadius:'10px',background:p.photos?.length?`url(${p.photos[0]}) center/cover`:'linear-gradient(135deg,#1a1510,#0d0a05)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>{!p.photos?.length&&<span style={{fontSize:'24px'}}>🏠</span>}</div>
                   <div style={{flex:1,minWidth:'200px'}}>
                     <h4 style={{color:colors.text,fontSize:'14px',fontWeight:'600',margin:'0 0 4px'}}>{p.title}</h4>
                     <p style={{color:colors.accent,fontSize:'16px',fontWeight:'700',margin:'0 0 4px'}}>$ {Number(p.price).toLocaleString('en-US')}</p>
@@ -1014,7 +1024,7 @@ export default function Home() {
               <div style={{padding:'20px 24px'}}>
                 {error&&<div style={{background:colors.redBg,color:colors.red,padding:'10px 14px',borderRadius:'10px',fontSize:'13px',marginBottom:'16px'}}>{error}</div>}
                 {success&&<div style={{background:colors.greenBg,color:colors.green,padding:'10px 14px',borderRadius:'10px',fontSize:'13px',marginBottom:'16px'}}>{success}</div>}
-                <div style={{marginBottom:'20px',padding:'16px',background:'rgba(108,99,255,0.08)',borderRadius:'12px',border:'1px solid rgba(108,99,255,0.2)'}}>
+                <div style={{marginBottom:'20px',padding:'16px',background:'rgba(232,148,58,0.08)',borderRadius:'12px',border:'1px solid rgba(232,148,58,0.2)'}}>
                   <p style={{color:colors.accent,fontSize:'14px',fontWeight:'700',margin:'0 0 8px'}}>📱 ¿Cómo exportar tus contactos?</p>
                   <div style={{color:colors.textSecondary,fontSize:'12px',lineHeight:'1.8'}}>
                     <p style={{margin:'0 0 4px'}}><span style={{color:colors.text,fontWeight:'600'}}>Android:</span> Contactos → Menú (⋮) → Exportar → Guardar como .vcf</p>
@@ -1023,7 +1033,7 @@ export default function Home() {
                 </div>
                 <div style={{marginBottom:'20px',padding:'16px',background:colors.inputBg,borderRadius:'12px',border:`1px solid ${colors.border}`}}>
                   <p style={{color:colors.text,fontSize:'14px',fontWeight:'600',margin:'0 0 12px'}}>Sube tu archivo .vcf</p>
-                  <button onClick={()=>fileRef.current?.click()} style={{padding:'10px 16px',borderRadius:'8px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'6px',fontSize:'13px',fontWeight:'600'}}>{Icons.upload} Seleccionar archivo .vcf</button>
+                  <button onClick={()=>fileRef.current?.click()} style={{padding:'10px 16px',borderRadius:'8px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'6px',fontSize:'13px',fontWeight:'600'}}>{Icons.upload} Seleccionar archivo .vcf</button>
                   <input ref={fileRef} type="file" accept=".vcf" hidden onChange={handleFile} />
                 </div>
                 {contacts.length>0&&<div>
