@@ -651,6 +651,7 @@ export default function Home() {
   const [viewProperty, setViewProperty] = useState(null)
   const [propView, setPropView] = useState('all')
   const [showBulkUpload, setShowBulkUpload] = useState(false)
+  const [viewMode, setViewMode] = useState('grid')
   const [clients, setClients] = useState([])
   const [showClientForm, setShowClientForm] = useState(false)
   const [editClient, setEditClient] = useState(null)
@@ -793,7 +794,7 @@ export default function Home() {
         {/* Saludo personalizado */}
         <div style={{ marginBottom:'16px', padding:'16px 20px', background:`linear-gradient(135deg, rgba(232,148,58,0.08), rgba(212,168,83,0.05))`, borderRadius:'14px', border:'1px solid rgba(232,148,58,0.15)' }}>
           <p style={{ color:colors.text, fontSize:'16px', fontWeight:'600', margin:0 }}>
-            {new Date().getHours()<12?'☀️ Buenos días':'🌙 Buenas tardes'}{currentUser?.full_name?', '+currentUser.full_name.split(' ')[0]:''} 👋
+            Hola{currentUser?.full_name?', '+currentUser.full_name.split(' ')[0]:''} 👋
           </p>
           <p style={{ color:colors.textSecondary, fontSize:'13px', margin:'4px 0 0' }}>
             {properties.filter(p=>p.agent_id===session.user?.id).length} propiedades · {clients.filter(c=>c.agent_id===session.user?.id).length} clientes
@@ -807,6 +808,7 @@ export default function Home() {
             </div>
             <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
               <button onClick={()=>setShowFilters(!showFilters)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:showFilters?colors.accentLight:colors.card, color:showFilters?colors.accent:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{Icons.filter} Filtros</button>
+              <button onClick={()=>setViewMode(viewMode==='grid'?'list':'grid')} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:colors.card, color:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{viewMode==='grid'?'☰':'▦'}</button>
               <button onClick={()=>setShowBulkUpload(true)} style={{ padding:'8px 12px', borderRadius:'10px', border:`1px solid ${colors.border}`, background:colors.card, color:colors.textSecondary, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'500' }}>{Icons.upload} Carga rápida</button>
               <button onClick={()=>{setEditProperty(null);setShowForm(true)}} style={{ padding:'8px 12px', borderRadius:'10px', border:'none', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px', fontSize:'13px', fontWeight:'600' }}>{Icons.plus} Nueva</button>
             </div>
@@ -865,7 +867,7 @@ export default function Home() {
               <p style={{ fontSize:'14px', margin:0 }}>{properties.length>0?'Ajusta los filtros':'Agrega tu primera propiedad'}</p>
             </div>
           ) : (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:'14px' }}>
+            <div style={{ display:'grid', gridTemplateColumns:viewMode==='grid'?'repeat(auto-fill, minmax(260px, 1fr))':'1fr', gap:'14px' }}>
               {filteredProperties.map(p=>(
                 <PropertyCard key={p.id} property={p} agents={agents} currentUserId={session.user?.id} onView={setViewProperty} onEdit={prop=>{setEditProperty(prop);setShowForm(true)}} onDelete={deleteProperty} showOwnerActions={propView==='mine'} />
               ))}
@@ -892,6 +894,7 @@ export default function Home() {
                   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})
                   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='mis_clientes.csv';a.click();URL.revokeObjectURL(url)
                 }} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{Icons.download} Exportar</button>
+                <button onClick={()=>setViewMode(viewMode==='grid'?'list':'grid')} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{viewMode==='grid'?'☰':'▦'}</button>
                 <button onClick={()=>setShowVcfImport(true)} style={{padding:'8px 12px',borderRadius:'10px',border:`1px solid ${colors.border}`,background:colors.card,color:colors.textSecondary,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'500'}}>{Icons.upload} Importar contactos</button>
                 <button onClick={()=>{setEditClient(null);setShowClientForm(true)}} style={{padding:'8px 12px',borderRadius:'10px',border:'none',background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`,color:colors.white,cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontWeight:'600'}}>{Icons.plus} Nuevo cliente</button>
               </div>
@@ -917,7 +920,7 @@ export default function Home() {
                 </div>
               )
               const statusColors={activo:{bg:colors.greenBg,color:colors.green},pausado:{bg:colors.yellowBg,color:colors.yellow},cerrado:{bg:colors.redBg,color:colors.red}}
-              return <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))',gap:'14px'}}>
+              return <div style={{display:'grid',gridTemplateColumns:viewMode==='grid'?'repeat(auto-fill, minmax(300px, 1fr))':'1fr',gap:'14px'}}>
                 {myClients.map(c=>{
                   const st=statusColors[c.status]||statusColors.activo
                   return <div key={c.id} style={{background:colors.card,borderRadius:'16px',border:`1px solid ${c.is_complete?colors.border:'rgba(251,191,36,0.4)'}`,padding:'16px',position:'relative'}}>
