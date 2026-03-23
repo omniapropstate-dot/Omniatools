@@ -89,26 +89,44 @@ function LoginScreen({ onLogin }) {
   }
   const inputStyle = { width:'100%', padding:'12px 16px', background:colors.inputBg, border:`1px solid ${colors.border}`, borderRadius:'10px', color:colors.text, fontSize:'14px', outline:'none', boxSizing:'border-box' }
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:`linear-gradient(135deg, ${colors.bg} 0%, #1a1005 50%, ${colors.bg} 100%)`, padding:'20px' }}>
-      <div style={{ width:'100%', maxWidth:'420px', background:colors.card, borderRadius:'20px', padding:'40px 32px', border:`1px solid ${colors.border}`, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
-        <div style={{ textAlign:'center', marginBottom:'32px' }}>
-          <div style={{ width:'56px', height:'56px', borderRadius:'16px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', fontSize:'24px', fontWeight:'bold', color:colors.white }}>O</div>
-          <h1 style={{ color:colors.text, fontSize:'24px', fontWeight:'700', margin:'0 0 4px' }}>OmniaTools</h1>
-          <p style={{ color:colors.textSecondary, fontSize:'14px', margin:0 }}>{isSignUp ? 'Crea tu cuenta de vendedor' : 'Ingresa a tu cuenta'}</p>
+    <div style={{ minHeight:'100vh', display:'flex', background:colors.bg }}>
+      {/* Left side - Branding */}
+      <div style={{ flex:1, background:`linear-gradient(135deg, #1a1005 0%, ${colors.bg} 50%, #1a0f05 100%)`, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', top:'15%', left:'10%', width:'200px', height:'200px', borderRadius:'50%', background:`radial-gradient(circle, rgba(232,148,58,0.08), transparent)` }} />
+        <div style={{ position:'absolute', bottom:'20%', right:'15%', width:'150px', height:'150px', borderRadius:'50%', background:`radial-gradient(circle, rgba(212,168,83,0.06), transparent)` }} />
+        <div style={{ textAlign:'center', zIndex:1 }}>
+          <div style={{ width:'90px', height:'90px', borderRadius:'24px', background:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 24px', fontSize:'42px', fontWeight:'bold', color:colors.white, boxShadow:'0 12px 40px rgba(232,148,58,0.25)' }}>O</div>
+          <h1 style={{ color:colors.text, fontSize:'36px', fontWeight:'800', margin:'0 0 8px', letterSpacing:'-0.5px' }}>OmniaTools</h1>
+          <p style={{ color:colors.accent, fontSize:'18px', fontWeight:'600', margin:'0 0 24px' }}>Vende más, gestiona mejor</p>
+          <div style={{ display:'flex', flexDirection:'column', gap:'12px', maxWidth:'280px', margin:'0 auto' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:'10px', color:colors.textSecondary, fontSize:'14px' }}><span style={{ color:colors.accent, fontSize:'18px' }}>🏠</span> Gestiona propiedades fácilmente</div>
+            <div style={{ display:'flex', alignItems:'center', gap:'10px', color:colors.textSecondary, fontSize:'14px' }}><span style={{ color:colors.accent, fontSize:'18px' }}>🔍</span> Match automático con clientes</div>
+            <div style={{ display:'flex', alignItems:'center', gap:'10px', color:colors.textSecondary, fontSize:'14px' }}><span style={{ color:colors.accent, fontSize:'18px' }}>📊</span> Herramientas ágiles para cerrar</div>
+          </div>
         </div>
-        {error && <div style={{ background:error.includes('exitoso')?colors.greenBg:colors.redBg, color:error.includes('exitoso')?colors.green:colors.red, padding:'12px 16px', borderRadius:'10px', fontSize:'13px', marginBottom:'20px' }}>{error}</div>}
-        <form onSubmit={handleSubmit}>
-          {isSignUp && (<>
-            <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Nombre completo</label><input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ej: Franco López" style={inputStyle} /></div>
-            <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Teléfono</label><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Ej: 70012345" style={inputStyle} /></div>
-          </>)}
-          <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Correo electrónico</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" style={inputStyle} /></div>
-          <div style={{ marginBottom:'24px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Contraseña</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" style={inputStyle} /></div>
-          <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px', background:loading?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:loading?'not-allowed':'pointer', boxSizing:'border-box' }}>{loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}</button>
-        </form>
-        <div style={{ textAlign:'center', marginTop:'20px' }}><button onClick={() => { setIsSignUp(!isSignUp); setError('') }} style={{ background:'none', border:'none', color:colors.accent, fontSize:'14px', cursor:'pointer', textDecoration:'underline' }}>{isSignUp ? 'Ya tengo cuenta → Iniciar sesión' : 'No tengo cuenta → Registrarme'}</button></div>
-        {!isSignUp && <div style={{ textAlign:'center', marginTop:'12px' }}><button onClick={async () => { if(!email){setError('Escribe tu correo primero');return}; setError(''); const{error:err}=await supabase.auth.resetPasswordForEmail(email); if(err){setError(err.message)}else{setError('Te enviamos un correo para recuperar tu contraseña. Revisa tu bandeja.')} }} style={{ background:'none', border:'none', color:colors.textMuted, fontSize:'13px', cursor:'pointer' }}>¿Olvidaste tu contraseña?</button></div>}
       </div>
+      {/* Right side - Login form */}
+      <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'40px 20px', background:colors.card }}>
+        <div style={{ width:'100%', maxWidth:'380px' }}>
+          <div style={{ marginBottom:'32px' }}>
+            <h2 style={{ color:colors.text, fontSize:'22px', fontWeight:'700', margin:'0 0 4px' }}>{isSignUp ? 'Crea tu cuenta' : 'Bienvenido de vuelta'}</h2>
+            <p style={{ color:colors.textSecondary, fontSize:'14px', margin:0 }}>{isSignUp ? 'Regístrate como vendedor' : 'Ingresa a tu cuenta'}</p>
+          </div>
+          {error && <div style={{ background:error.includes('exitoso')?colors.greenBg:colors.redBg, color:error.includes('exitoso')?colors.green:colors.red, padding:'12px 16px', borderRadius:'10px', fontSize:'13px', marginBottom:'20px' }}>{error}</div>}
+          <form onSubmit={handleSubmit}>
+            {isSignUp && (<>
+              <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Nombre completo</label><input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ej: Franco López" style={inputStyle} /></div>
+              <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Teléfono</label><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Ej: 70012345" style={inputStyle} /></div>
+            </>)}
+            <div style={{ marginBottom:'16px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Correo electrónico</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" style={inputStyle} /></div>
+            <div style={{ marginBottom:'24px' }}><label style={{ color:colors.textSecondary, fontSize:'13px', display:'block', marginBottom:'6px' }}>Contraseña</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" style={inputStyle} /></div>
+            <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px', background:loading?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:loading?'not-allowed':'pointer', boxSizing:'border-box' }}>{loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}</button>
+          </form>
+          <div style={{ textAlign:'center', marginTop:'20px' }}><button onClick={() => { setIsSignUp(!isSignUp); setError('') }} style={{ background:'none', border:'none', color:colors.accent, fontSize:'14px', cursor:'pointer', textDecoration:'underline' }}>{isSignUp ? 'Ya tengo cuenta → Iniciar sesión' : 'No tengo cuenta → Registrarme'}</button></div>
+          {!isSignUp && <div style={{ textAlign:'center', marginTop:'12px' }}><button onClick={async () => { if(!email){setError('Escribe tu correo primero');return}; setError(''); const{error:err}=await supabase.auth.resetPasswordForEmail(email); if(err){setError(err.message)}else{setError('Te enviamos un correo para recuperar tu contraseña. Revisa tu bandeja.')} }} style={{ background:'none', border:'none', color:colors.textMuted, fontSize:'13px', cursor:'pointer' }}>¿Olvidaste tu contraseña?</button></div>}
+        </div>
+      </div>
+      <style>{`@media(max-width:768px){div[style*="flex:1"]:first-child{display:none !important}}`}</style>
     </div>
   )
 }
