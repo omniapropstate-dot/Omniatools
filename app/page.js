@@ -951,6 +951,31 @@ export default function Home() {
               return <div style={{display:'grid',gridTemplateColumns:viewMode==='grid'?'repeat(auto-fill, minmax(300px, 1fr))':'1fr',gap:'14px'}}>
                 {myClients.map(c=>{
                   const st=statusColors[c.status]||statusColors.activo
+                  if(viewMode==='list') {
+                    return <div key={c.id} style={{background:colors.card,borderRadius:'12px',border:`1px solid ${c.is_complete?colors.border:'rgba(251,191,36,0.4)'}`,padding:'10px 14px',display:'flex',alignItems:'center',gap:'12px'}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:'8px'}}>
+                          <div style={{display:'flex',alignItems:'center',gap:'8px',minWidth:0}}>
+                            <h3 style={{color:colors.text,fontSize:'13px',fontWeight:'600',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.full_name}</h3>
+                            <span style={{background:st.bg,color:st.color,padding:'2px 6px',borderRadius:'4px',fontSize:'10px',fontWeight:'600',flexShrink:0}}>{c.status}</span>
+                            {!c.is_complete&&<span style={{background:colors.yellowBg,color:colors.yellow,padding:'2px 6px',borderRadius:'4px',fontSize:'10px',fontWeight:'600',flexShrink:0}}>⚠</span>}
+                          </div>
+                          {(c.budget_max>0)&&<p style={{color:colors.accent,fontSize:'13px',fontWeight:'700',margin:0,whiteSpace:'nowrap'}}>$ {Number(c.budget_min||0).toLocaleString('en-US')} - $ {Number(c.budget_max).toLocaleString('en-US')}</p>}
+                        </div>
+                        <div style={{display:'flex',gap:'6px',alignItems:'center',marginTop:'4px',flexWrap:'wrap'}}>
+                          {c.operation_type&&<span style={{color:colors.textMuted,fontSize:'11px'}}>{opLabels[c.operation_type]}</span>}
+                          {c.property_type&&<span style={{color:colors.textMuted,fontSize:'11px'}}>· {typeLabels[c.property_type]}</span>}
+                          {c.phone&&<span style={{color:colors.textSecondary,fontSize:'11px'}}>📞 {c.phone}</span>}
+                          {c.preferred_zones?.length>0&&c.preferred_zones.map(z=><span key={z} style={{color:colors.textMuted,fontSize:'11px'}}>📍{z}</span>)}
+                        </div>
+                      </div>
+                      <div style={{display:'flex',gap:'4px',flexShrink:0}}>
+                        <button onClick={()=>setMatchClient(c)} style={{background:colors.greenBg,border:'none',color:colors.green,width:'32px',height:'32px',borderRadius:'8px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px'}}>🔍</button>
+                        <button onClick={()=>{setEditClient(c);setShowClientForm(true)}} style={{background:colors.accentLight,border:'none',color:colors.accent,width:'32px',height:'32px',borderRadius:'8px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>{Icons.edit}</button>
+                        <button onClick={()=>{if(confirm('¿Eliminar?'))supabase.from('clients').delete().eq('id',c.id).then(()=>loadData())}} style={{background:colors.redBg,border:'none',color:colors.red,width:'32px',height:'32px',borderRadius:'8px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px'}}>🗑</button>
+                      </div>
+                    </div>
+                  }
                   return <div key={c.id} style={{background:colors.card,borderRadius:'16px',border:`1px solid ${c.is_complete?colors.border:'rgba(251,191,36,0.4)'}`,padding:'16px',position:'relative'}}>
                     {!c.is_complete&&<div style={{position:'absolute',top:'12px',right:'12px',background:colors.yellowBg,color:colors.yellow,padding:'2px 8px',borderRadius:'6px',fontSize:'10px',fontWeight:'600'}}>⚠ Incompleto</div>}
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'10px'}}>
