@@ -113,13 +113,41 @@ function LoginScreen({ onLogin }) {
   )
 }
 
-function PropertyCard({ property, agents, currentUserId, onView, onEdit, onDelete, showOwnerActions }) {
+function PropertyCard({ property, agents, currentUserId, onView, onEdit, onDelete, showOwnerActions, listMode }) {
   const agent = agents.find(a => a.id === property.agent_id)
   const isOwner = property.agent_id === currentUserId
   const statusMap = { disponible:{bg:colors.greenBg,color:colors.green,label:'Disponible'}, reservada:{bg:colors.yellowBg,color:colors.yellow,label:'Reservada'}, vendida:{bg:colors.redBg,color:colors.red,label:'Vendida'}, inactiva:{bg:'rgba(107,114,128,0.12)',color:colors.textMuted,label:'Inactiva'} }
   const status = statusMap[property.status] || statusMap.disponible
   const photo = property.photos?.length > 0 ? property.photos[0] : null
   const priceBs = property.exchange_rate ? `Bs ${Math.round(Number(property.price)*Number(property.exchange_rate)).toLocaleString('es-BO')}` : ''
+
+  if (listMode) {
+    return (
+      <div onClick={() => onView(property)} style={{ background:colors.card, borderRadius:'12px', border:`1px solid ${colors.border}`, cursor:'pointer', display:'flex', alignItems:'center', gap:'12px', padding:'10px' }}>
+        <div style={{ width:'70px', height:'70px', borderRadius:'10px', background:photo?`url(${photo}) center/cover`:'linear-gradient(135deg, #1a1510, #0d0a05)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>{!photo && <span style={{ fontSize:'24px' }}>🏠</span>}</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'start', gap:'8px' }}>
+            <h3 style={{ color:colors.text, fontSize:'13px', fontWeight:'600', margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{property.title}</h3>
+            <p style={{ color:colors.accent, fontSize:'15px', fontWeight:'700', margin:0, whiteSpace:'nowrap' }}>$ {Number(property.price).toLocaleString('en-US')}</p>
+          </div>
+          <div style={{ display:'flex', gap:'6px', alignItems:'center', marginTop:'4px', flexWrap:'wrap' }}>
+            <span style={{ background:'rgba(0,0,0,0.4)', color:colors.white, padding:'2px 6px', borderRadius:'4px', fontSize:'10px', fontWeight:'600' }}>{opLabels[property.operation_type]}</span>
+            <span style={{ background:status.bg, color:status.color, padding:'2px 6px', borderRadius:'4px', fontSize:'10px', fontWeight:'600' }}>{status.label}</span>
+            <span style={{ color:colors.textSecondary, fontSize:'11px' }}>📍{property.zone}</span>
+            {property.bedrooms > 0 && <span style={{ color:colors.textMuted, fontSize:'11px' }}>{property.bedrooms}hab</span>}
+            {property.bathrooms > 0 && <span style={{ color:colors.textMuted, fontSize:'11px' }}>{property.bathrooms}baños</span>}
+            {property.area_m2 && <span style={{ color:colors.textMuted, fontSize:'11px' }}>{property.area_m2}m²</span>}
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:'4px', flexShrink:0 }}>
+          <button onClick={e=>{e.stopPropagation();const msg=`🏠 *${property.title}*%0A💰 $${Number(property.price).toLocaleString('en-US')}%0A📍 ${property.zone}%0A📞 ${agent?.full_name||''} - ${agent?.phone||''}`;window.open('https://wa.me/?text='+msg,'_blank')}} style={{ background:'#25D366', border:'none', color:colors.white, width:'32px', height:'32px', borderRadius:'8px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px' }}>📤</button>
+          {isOwner && showOwnerActions && <button onClick={e=>{e.stopPropagation();onEdit(property)}} style={{ background:'rgba(232,148,58,0.15)', border:'none', color:colors.accent, width:'32px', height:'32px', borderRadius:'8px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>{Icons.edit}</button>}
+          {isOwner && showOwnerActions && <button onClick={e=>{e.stopPropagation();if(confirm('¿Eliminar?'))onDelete(property.id)}} style={{ background:colors.redBg, border:'none', color:colors.red, width:'32px', height:'32px', borderRadius:'8px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px' }}>🗑</button>}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div onClick={() => onView(property)} style={{ background:colors.card, borderRadius:'16px', overflow:'hidden', border:`1px solid ${colors.border}`, cursor:'pointer' }}>
       <div style={{ height:'160px', background:photo?`url(${photo}) center/cover`:'linear-gradient(135deg, #1a1510, #0d0a05)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
@@ -869,7 +897,7 @@ export default function Home() {
           ) : (
             <div style={{ display:'grid', gridTemplateColumns:viewMode==='grid'?'repeat(auto-fill, minmax(260px, 1fr))':'1fr', gap:'14px' }}>
               {filteredProperties.map(p=>(
-                <PropertyCard key={p.id} property={p} agents={agents} currentUserId={session.user?.id} onView={setViewProperty} onEdit={prop=>{setEditProperty(prop);setShowForm(true)}} onDelete={deleteProperty} showOwnerActions={propView==='mine'} />
+                <PropertyCard key={p.id} property={p} agents={agents} currentUserId={session.user?.id} onView={setViewProperty} onEdit={prop=>{setEditProperty(prop);setShowForm(true)}} onDelete={deleteProperty} showOwnerActions={propView==='mine'} listMode={viewMode==='list'} />
               ))}
             </div>
           )}
