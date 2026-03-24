@@ -19,6 +19,7 @@ const colors = {
 }
 
 const COMMON_AREAS = ['Piscina','Parrillero/BBQ','Sala de reuniones','Gimnasio','Jardín','Salón de eventos','Área de juegos infantiles','Cancha deportiva','Lavandería común','Estacionamiento de visitas']
+const PAYMENT_TYPES = ['Pago al Contado','Crédito Directo','Crédito Financiero']
 const compressImage = (file, maxWidth=1200, quality=0.7) => new Promise((resolve) => {
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -239,6 +240,7 @@ function PropertyFormModal({ property, session, onClose, onSaved }) {
     area_m2:property?.area_m2||'', parking_spots:property?.parking_spots||0,
     status:property?.status||'disponible', exchange_rate:property?.exchange_rate||'6.96',
     common_areas:property?.common_areas||[],
+    payment_types:property?.payment_types||[],
   })
   const [photos, setPhotos] = useState(property?.photos||[])
   const [uploading, setUploading] = useState(false)
@@ -259,6 +261,7 @@ function PropertyFormModal({ property, session, onClose, onSaved }) {
     setPhotos(np); setUploading(false)
   }
   const toggleArea = (a) => setForm(f=>({...f,common_areas:f.common_areas.includes(a)?f.common_areas.filter(x=>x!==a):[...f.common_areas,a]}))
+  const togglePayment = (p) => setForm(f=>({...f,payment_types:f.payment_types.includes(p)?f.payment_types.filter(x=>x!==p):[...f.payment_types,p]}))
   const handleSave = async () => {
     if (!form.title||!form.price||!form.zone) { setError('Título, precio y zona son obligatorios'); return }
     setSaving(true); setError('')
@@ -321,6 +324,16 @@ function PropertyFormModal({ property, session, onClose, onSaved }) {
               ))}
             </div>
           </div>
+          <div style={{ marginTop:'16px' }}>
+            <label style={ls}>Tipo de pago aceptado</label>
+            <div style={{ display:'flex', gap:'6px', marginTop:'8px', flexWrap:'wrap' }}>
+              {PAYMENT_TYPES.map(p=>(
+                <button key={p} onClick={()=>togglePayment(p)} style={{ padding:'8px 14px', borderRadius:'8px', border:`1px solid ${form.payment_types.includes(p)?colors.accent:colors.border}`, background:form.payment_types.includes(p)?colors.accentLight:colors.inputBg, color:form.payment_types.includes(p)?colors.accent:colors.textSecondary, fontSize:'12px', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px' }}>
+                  <span style={{ width:'16px', height:'16px', borderRadius:'4px', border:`2px solid ${form.payment_types.includes(p)?colors.accent:colors.border}`, background:form.payment_types.includes(p)?colors.accent:'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'10px', color:colors.white, flexShrink:0 }}>{form.payment_types.includes(p)?'✓':''}</span>{p}
+                </button>
+              ))}
+            </div>
+          </div>
           <div style={{ marginTop:'16px' }}><label style={ls}>Descripción</label><textarea style={{ ...is, minHeight:'80px', resize:'vertical' }} value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Describe la propiedad..." /></div>
           <button onClick={handleSave} disabled={saving} style={{ width:'100%', padding:'14px', marginTop:'20px', background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, color:colors.white, border:'none', borderRadius:'10px', fontSize:'15px', fontWeight:'600', cursor:saving?'not-allowed':'pointer' }}>{saving?'Guardando...':property?'Guardar cambios':'Crear propiedad'}</button>
         </div>
@@ -354,6 +367,7 @@ function PropertyDetail({ property, agents, onClose, onBrochure }) {
             ))}
           </div>
           {property.common_areas?.length > 0 && <div style={{ marginBottom:'20px' }}><h4 style={{ color:colors.textSecondary, fontSize:'12px', fontWeight:'600', textTransform:'uppercase', marginBottom:'8px' }}>Áreas comunes</h4><div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>{property.common_areas.map(a=><span key={a} style={{ padding:'4px 10px', background:colors.greenBg, color:colors.green, borderRadius:'6px', fontSize:'12px', fontWeight:'500' }}>✓ {a}</span>)}</div></div>}
+          {property.payment_types?.length > 0 && <div style={{ marginBottom:'20px' }}><h4 style={{ color:colors.textSecondary, fontSize:'12px', fontWeight:'600', textTransform:'uppercase', marginBottom:'8px' }}>Tipo de pago</h4><div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>{property.payment_types.map(p=><span key={p} style={{ padding:'4px 10px', background:colors.goldBg, color:colors.gold, borderRadius:'6px', fontSize:'12px', fontWeight:'500' }}>💳 {p}</span>)}</div></div>}
           {property.description && <div style={{ marginBottom:'20px' }}><h4 style={{ color:colors.textSecondary, fontSize:'12px', fontWeight:'600', textTransform:'uppercase', marginBottom:'8px' }}>Descripción</h4><p style={{ color:colors.text, fontSize:'14px', lineHeight:'1.6', margin:0 }}>{property.description}</p></div>}
           <div style={{ padding:'16px', background:colors.accentLight, borderRadius:'12px', border:'1px solid rgba(232,148,58,0.2)', marginBottom:'20px' }}>
             <span style={{ color:colors.textMuted, fontSize:'12px' }}>Agente</span>
@@ -377,10 +391,10 @@ function BulkUploadModal({ session, onClose, onSaved }) {
   const [success, setSuccess] = useState('')
   const fileRef = useRef()
   const downloadTemplate = () => {
-    const h = 'titulo,transaccion,tipo,precio_usd,tipo_cambio,zona,direccion,habitaciones,banos,area_m2,estacionamientos,areas_comunes'
-    const e1 = 'Casa moderna,venta,casa,150000,6.96,Zona Norte,Av. América #1234,3,2,120,1,Piscina|Jardín|Parrillero/BBQ'
-    const e2 = 'Depto centro,alquiler,departamento,500,6.96,Centro,Calle Bolívar #567,2,1,85,0,Gimnasio|Lavandería común'
-    const e3 = 'Terreno Tiquipaya,venta,terreno,95000,6.96,Tiquipaya,Km 8,0,0,300,0,'
+    const h = 'titulo,transaccion,tipo,precio_usd,tipo_cambio,zona,direccion,habitaciones,banos,area_m2,estacionamientos,areas_comunes,tipo_pago,descripcion'
+    const e1 = 'Casa moderna,venta,casa,150000,6.96,Zona Norte,Av. América #1234,3,2,120,1,Piscina|Jardín|Parrillero/BBQ,Pago al Contado|Crédito Financiero,Casa amplia con jardín'
+    const e2 = 'Depto centro,alquiler,departamento,500,6.96,Centro,Calle Bolívar #567,2,1,85,0,Gimnasio|Lavandería común,,Departamento céntrico amoblado'
+    const e3 = 'Terreno Tiquipaya,venta,terreno,95000,6.96,Tiquipaya,Km 8,0,0,300,0,,Crédito Directo,Lote sobre avenida'
     const csv = [h,e1,e2,e3].join('\n')
     const blob = new Blob(['\ufeff'+csv], { type:'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -396,7 +410,7 @@ function BulkUploadModal({ session, onClose, onSaved }) {
       if (v.length<4) continue
       const om = {venta:'venta',alquiler:'alquiler',anticretico:'anticretico','anticrético':'anticretico',preventa:'preventa'}
       const tm = {casa:'casa',departamento:'departamento',depto:'departamento',terreno:'terreno',oficina:'oficina',local:'local_comercial',otro:'otro'}
-      rows.push({ title:v[0]||'', operation_type:om[(v[1]||'').toLowerCase()]||'venta', property_type:tm[(v[2]||'').toLowerCase()]||'casa', price:parseFloat(v[3])||0, exchange_rate:parseFloat(v[4])||6.96, zone:v[5]||'', address:v[6]||'', bedrooms:parseInt(v[7])||0, bathrooms:parseInt(v[8])||0, area_m2:parseFloat(v[9])||null, parking_spots:parseInt(v[10])||0, common_areas:v[11]?v[11].split('|').map(a=>a.trim()).filter(a=>a):[], status:'disponible', agent_id:session.user.id, photos:[] })
+      rows.push({ title:v[0]||'', operation_type:om[(v[1]||'').toLowerCase()]||'venta', property_type:tm[(v[2]||'').toLowerCase()]||'casa', price:parseFloat(v[3])||0, exchange_rate:parseFloat(v[4])||6.96, zone:v[5]||'', address:v[6]||'', bedrooms:parseInt(v[7])||0, bathrooms:parseInt(v[8])||0, area_m2:parseFloat(v[9])||null, parking_spots:parseInt(v[10])||0, common_areas:v[11]?v[11].split('|').map(a=>a.trim()).filter(a=>a):[], payment_types:v[12]?v[12].split('|').map(a=>a.trim()).filter(a=>a):[], description:v[13]||'', status:'disponible', agent_id:session.user.id, photos:[] })
     }
     return rows
   }
@@ -410,7 +424,8 @@ function BulkUploadModal({ session, onClose, onSaved }) {
         const om={venta:'venta',alquiler:'alquiler',anticretico:'anticretico','anticrético':'anticretico',preventa:'preventa'}
         const tm={casa:'casa',departamento:'departamento',depto:'departamento',terreno:'terreno',oficina:'oficina',local:'local_comercial',otro:'otro'}
         const ar=g(['areas_comunes','Areas_comunes','AREAS_COMUNES'])
-        return { title:g(['titulo','Titulo','TITULO','título','title']), operation_type:om[g(['transaccion','Transaccion','operacion','Operacion']).toLowerCase()]||'venta', property_type:tm[g(['tipo','Tipo','TIPO']).toLowerCase()]||'casa', price:parseFloat(g(['precio_usd','Precio_usd','precio','Precio']))||0, exchange_rate:parseFloat(g(['tipo_cambio','Tipo_cambio']))||6.96, zone:g(['zona','Zona']), address:g(['direccion','Direccion','dirección']), bedrooms:parseInt(g(['habitaciones','Habitaciones']))||0, bathrooms:parseInt(g(['banos','Banos','baños','Baños']))||0, area_m2:parseFloat(g(['area_m2','Area','area']))||null, parking_spots:parseInt(g(['estacionamientos','Estacionamientos']))||0, common_areas:ar?ar.split('|').map(a=>a.trim()).filter(a=>a):[], status:'disponible', agent_id:session.user.id, photos:[] }
+        const pt=g(['tipo_pago','Tipo_pago','TIPO_PAGO'])
+        return { title:g(['titulo','Titulo','TITULO','título','title']), operation_type:om[g(['transaccion','Transaccion','operacion','Operacion']).toLowerCase()]||'venta', property_type:tm[g(['tipo','Tipo','TIPO']).toLowerCase()]||'casa', price:parseFloat(g(['precio_usd','Precio_usd','precio','Precio']))||0, exchange_rate:parseFloat(g(['tipo_cambio','Tipo_cambio']))||6.96, zone:g(['zona','Zona']), address:g(['direccion','Direccion','dirección']), bedrooms:parseInt(g(['habitaciones','Habitaciones']))||0, bathrooms:parseInt(g(['banos','Banos','baños','Baños']))||0, area_m2:parseFloat(g(['area_m2','Area','area']))||null, parking_spots:parseInt(g(['estacionamientos','Estacionamientos']))||0, common_areas:ar?ar.split('|').map(a=>a.trim()).filter(a=>a):[], payment_types:pt?pt.split('|').map(a=>a.trim()).filter(a=>a):[], description:g(['descripcion','Descripcion','DESCRIPCION','descripción']), status:'disponible', agent_id:session.user.id, photos:[] }
       }).filter(r=>r.title&&r.price>0)
     } catch(e) { setError('Error al leer Excel.'); return [] }
   }
@@ -444,7 +459,9 @@ function BulkUploadModal({ session, onClose, onSaved }) {
               <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>precio_usd:</span> solo números, sin símbolos. Ej: <span style={{ color:colors.green }}>150000</span></p>
               <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>tipo_cambio:</span> cuántos Bs vale 1 dólar. Ej: <span style={{ color:colors.green }}>6.96</span></p>
               <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>habitaciones, banos, estacionamientos:</span> solo números. Ej: <span style={{ color:colors.green }}>3</span></p>
-              <p style={{ margin:'0' }}><span style={{ color:colors.text, fontWeight:'600' }}>areas_comunes:</span> separa con | Ej: <span style={{ color:colors.green }}>Piscina|Gimnasio|Jardín</span></p>
+              <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>areas_comunes:</span> separa con | Ej: <span style={{ color:colors.green }}>Piscina|Gimnasio|Jardín</span></p>
+              <p style={{ margin:'0 0 4px' }}><span style={{ color:colors.text, fontWeight:'600' }}>tipo_pago:</span> separa con | Ej: <span style={{ color:colors.green }}>Pago al Contado|Crédito Financiero</span></p>
+              <p style={{ margin:'0' }}><span style={{ color:colors.text, fontWeight:'600' }}>descripcion:</span> texto libre. Ej: <span style={{ color:colors.green }}>Casa amplia con jardín</span></p>
             </div>
           </div>
           <div style={{ marginBottom:'20px', padding:'16px', background:colors.inputBg, borderRadius:'12px', border:`1px solid ${colors.border}` }}>
@@ -480,14 +497,16 @@ function ClientFormModal({ client, session, onClose, onSaved }) {
     operation_type:client?.operation_type||'', property_type:client?.property_type||'',
     preferred_zones:client?.preferred_zones||[], bedrooms_min:client?.bedrooms_min||0,
     bathrooms_min:client?.bathrooms_min||0, status:client?.status||'activo', notes:client?.notes||'',
+    payment_types:client?.payment_types||[],
   })
   const [zoneInput, setZoneInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const addZone = () => { if(zoneInput.trim()&&!form.preferred_zones.includes(zoneInput.trim())){setForm(f=>({...f,preferred_zones:[...f.preferred_zones,zoneInput.trim()]}));setZoneInput('')} }
   const removeZone = (z) => setForm(f=>({...f,preferred_zones:f.preferred_zones.filter(x=>x!==z)}))
+  const toggleClientPayment = (p) => setForm(f=>({...f,payment_types:f.payment_types.includes(p)?f.payment_types.filter(x=>x!==p):[...f.payment_types,p]}))
   const handleSave = async () => {
-    if(!form.full_name){setError('El nombre es obligatorio');return}
+    if(!form.full_name||!form.phone){setError('Nombre y teléfono son obligatorios');return}
     setSaving(true);setError('')
     const isComplete = !!(form.budget_max&&form.operation_type&&form.property_type)
     const payload = {...form, agent_id:session.user.id, is_complete:isComplete}
@@ -527,6 +546,16 @@ function ClientFormModal({ client, session, onClose, onSaved }) {
           <div style={{marginTop:'12px'}}><label style={ls}>Zonas preferidas</label>
             <div style={{display:'flex',gap:'6px',marginBottom:'8px'}}><input style={{...is,flex:1}} value={zoneInput} onChange={e=>setZoneInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addZone()} placeholder="Escribe zona y presiona +" /><button onClick={addZone} style={{padding:'10px 14px',background:colors.accent,color:colors.white,border:'none',borderRadius:'10px',cursor:'pointer',fontWeight:'700'}}>+</button></div>
             {form.preferred_zones.length>0&&<div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>{form.preferred_zones.map(z=><span key={z} style={{padding:'4px 10px',background:colors.accentLight,color:colors.accent,borderRadius:'6px',fontSize:'12px',display:'flex',alignItems:'center',gap:'4px'}}>{z}<button onClick={()=>removeZone(z)} style={{background:'none',border:'none',color:colors.accent,cursor:'pointer',fontWeight:'700',padding:0}}>✕</button></span>)}</div>}
+          </div>
+          <div style={{marginTop:'12px'}}>
+            <label style={ls}>Tipo de pago preferido</label>
+            <div style={{display:'flex',gap:'6px',marginTop:'8px',flexWrap:'wrap'}}>
+              {PAYMENT_TYPES.map(p=>(
+                <button key={p} onClick={()=>toggleClientPayment(p)} style={{padding:'8px 14px',borderRadius:'8px',border:`1px solid ${form.payment_types.includes(p)?colors.accent:colors.border}`,background:form.payment_types.includes(p)?colors.accentLight:colors.inputBg,color:form.payment_types.includes(p)?colors.accent:colors.textSecondary,fontSize:'12px',cursor:'pointer',display:'flex',alignItems:'center',gap:'6px'}}>
+                  <span style={{width:'16px',height:'16px',borderRadius:'4px',border:`2px solid ${form.payment_types.includes(p)?colors.accent:colors.border}`,background:form.payment_types.includes(p)?colors.accent:'transparent',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',color:colors.white,flexShrink:0}}>{form.payment_types.includes(p)?'✓':''}</span>{p}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{marginTop:'12px'}}><label style={ls}>Notas</label><textarea style={{...is,minHeight:'60px',resize:'vertical'}} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Notas sobre el cliente..." /></div>
           <button onClick={handleSave} disabled={saving} style={{width:'100%',padding:'14px',marginTop:'20px',background:saving?colors.textMuted:`linear-gradient(135deg, ${colors.accent}, ${colors.gold})`,color:colors.white,border:'none',borderRadius:'10px',fontSize:'15px',fontWeight:'600',cursor:saving?'not-allowed':'pointer'}}>{saving?'Guardando...':client?'Guardar cambios':'Crear cliente'}</button>
@@ -875,8 +904,8 @@ export default function Home() {
             {propView==='mine' && filteredProperties.length>0 && (
               <button onClick={()=>{
                 const myProps=filteredProperties
-                const h='titulo,transaccion,tipo,precio_usd,tipo_cambio,zona,direccion,habitaciones,banos,area_m2,estacionamientos,areas_comunes'
-                const rows=myProps.map(p=>[p.title,p.operation_type,p.property_type,p.price,p.exchange_rate||'',p.zone,p.address||'',p.bedrooms,p.bathrooms,p.area_m2||'',p.parking_spots,p.common_areas?.join('|')||''].map(v=>String(v).includes(',')?`"${v}"`:v).join(','))
+                const h='titulo,transaccion,tipo,precio_usd,tipo_cambio,zona,direccion,habitaciones,banos,area_m2,estacionamientos,areas_comunes,tipo_pago,descripcion'
+                const rows=myProps.map(p=>[p.title,p.operation_type,p.property_type,p.price,p.exchange_rate||'',p.zone,p.address||'',p.bedrooms,p.bathrooms,p.area_m2||'',p.parking_spots,p.common_areas?.join('|')||'',p.payment_types?.join('|')||'',p.description||''].map(v=>String(v).includes(',')?`"${v}"`:v).join(','))
                 const csv=[h,...rows].join('\n')
                 const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})
                 const url=URL.createObjectURL(blob)
@@ -1051,6 +1080,7 @@ export default function Home() {
           if(c.bedrooms_min&&p.bedrooms<c.bedrooms_min) return false
           if(c.bathrooms_min&&p.bathrooms<c.bathrooms_min) return false
           if(c.preferred_zones?.length>0&&!c.preferred_zones.some(z=>p.zone?.toLowerCase().includes(z.toLowerCase()))) return false
+          if(c.payment_types?.length>0&&p.payment_types?.length>0&&!c.payment_types.some(pt=>p.payment_types.includes(pt))) return false
           return true
         })
         return <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:'16px'}}>
